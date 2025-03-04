@@ -55,14 +55,20 @@ public class DisputeServiceImpl implements DisputeService {
             // Save dispute
             disputeRepository.save(dispute);
 
-            // Start Camunda process
-            Map<String, Object> variables = new HashMap<>();
-            variables.put("caseId", caseId);
-            variables.put("userId", request.getUserId());
-            variables.put("disputeType", request.getDisputeType());
-            variables.put("creditReportId", request.getCreditReportId());
+            // Try to start Camunda process
+            try {
+                Map<String, Object> variables = new HashMap<>();
+                variables.put("caseId", caseId);
+                variables.put("userId", request.getUserId());
+                variables.put("disputeType", request.getDisputeType());
+                variables.put("creditReportId", request.getCreditReportId());
 
-            runtimeService.startProcessInstanceByKey("dispute_resolution_process", caseId, variables);
+                runtimeService.startProcessInstanceByKey("dispute_resolution_process", caseId, variables);
+                log.info("Camunda process started successfully for case ID: {}", caseId);
+            } catch (Exception e) {
+                log.warn("Failed to start Camunda process for case ID: {}. Error: {}", caseId, e.getMessage());
+                // Continue with dispute creation even if Camunda process fails
+            }
 
             log.info("Dispute case created successfully with ID: {}", caseId);
 

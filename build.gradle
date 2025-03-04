@@ -59,4 +59,8 @@ tasks.named('test') {
 // Prevent warnings with Gradle 8+
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs.remove('-Werror')
+}
+
+bootRun {
+    jvmArgs = ['-Djava.io.tmpdir=D:/Learning-Camunda/temp']
 } 

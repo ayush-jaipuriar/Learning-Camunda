@@ -11,10 +11,26 @@
                   exporterVersion="5.0.0">
   <bpmn:process id="dispute_resolution_process" name="Dispute Resolution Process" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="Dispute Submitted">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="caseId" label="Case ID" type="string" />
+          <camunda:formField id="userId" label="User ID" type="string" />
+          <camunda:formField id="disputeType" label="Dispute Type" type="string" />
+          <camunda:formField id="creditReportId" label="Credit Report ID" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
       <bpmn:outgoing>Flow_1yw1yd9</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:sequenceFlow id="Flow_1yw1yd9" sourceRef="StartEvent_1" targetRef="Activity_1p9mxz9" />
     <bpmn:userTask id="Activity_1p9mxz9" name="Review Dispute" camunda:assignee="admin">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="caseId" label="Case ID" type="string" />
+          <camunda:formField id="userId" label="User ID" type="string" />
+          <camunda:formField id="disputeType" label="Dispute Type" type="string" />
+          <camunda:formField id="creditReportId" label="Credit Report ID" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_1yw1yd9</bpmn:incoming>
       <bpmn:outgoing>Flow_0yvpi8r</bpmn:outgoing>
     </bpmn:userTask>
