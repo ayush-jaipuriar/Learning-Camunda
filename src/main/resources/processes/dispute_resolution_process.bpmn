@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_0fr9mxs"
+                  targetNamespace="http://bpmn.io/schema/bpmn"
+                  exporter="Camunda Modeler"
+                  exporterVersion="5.0.0">
+  <bpmn:process id="dispute_resolution_process" name="Dispute Resolution Process" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1" name="Dispute Submitted">
+      <bpmn:outgoing>Flow_1yw1yd9</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1yw1yd9" sourceRef="StartEvent_1" targetRef="Activity_1p9mxz9" />
+    <bpmn:userTask id="Activity_1p9mxz9" name="Review Dispute" camunda:assignee="admin">
+      <bpmn:incoming>Flow_1yw1yd9</bpmn:incoming>
+      <bpmn:outgoing>Flow_0yvpi8r</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Event_0z47pf5" name="Dispute Processed">
+      <bpmn:incoming>Flow_0yvpi8r</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0yvpi8r" sourceRef="Activity_1p9mxz9" targetRef="Event_0z47pf5" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="dispute_resolution_process">
+      <bpmndi:BPMNEdge id="Flow_1yw1yd9_di" bpmnElement="Flow_1yw1yd9">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0yvpi8r_di" bpmnElement="Flow_0yvpi8r">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="432" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="158" y="142" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1p9mxz9_di" bpmnElement="Activity_1p9mxz9">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0z47pf5_di" bpmnElement="Event_0z47pf5">
+        <dc:Bounds x="432" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="408" y="142" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions> 

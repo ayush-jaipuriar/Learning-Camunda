@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cmmn:definitions xmlns:dc="http://www.omg.org/spec/CMMN/20151109/DC"
+                  xmlns:di="http://www.omg.org/spec/CMMN/20151109/DI"
+                  xmlns:cmmndi="http://www.omg.org/spec/CMMN/20151109/CMMNDI"
+                  xmlns:cmmn="http://www.omg.org/spec/CMMN/20151109/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:camunda="http://camunda.org/schema/1.0/cmmn"
+                  id="Definitions_1"
+                  targetNamespace="http://bpmn.io/schema/cmmn">
+  <cmmn:case id="dispute_case" name="Dispute Case">
+    <cmmn:casePlanModel id="CasePlanModel_1" name="Dispute Resolution">
+      <cmmn:planItem id="PI_Stage_1" definitionRef="Stage_1" />
+      
+      <cmmn:stage id="Stage_1" name="Dispute Processing">
+        <cmmn:planItem id="PI_HumanTask_1" definitionRef="HumanTask_1" />
+        <cmmn:planItem id="PI_ProcessTask_1" definitionRef="ProcessTask_1" />
+        <cmmn:planItem id="PI_Milestone_1" definitionRef="Milestone_1" />
+        
+        <cmmn:humanTask id="HumanTask_1" name="Review Documents">
+          <cmmn:defaultControl>
+            <cmmn:manualActivationRule />
+          </cmmn:defaultControl>
+        </cmmn:humanTask>
+        
+        <cmmn:processTask id="ProcessTask_1" name="Process Dispute" processRef="dispute_resolution_process">
+          <cmmn:defaultControl>
+            <cmmn:manualActivationRule />
+          </cmmn:defaultControl>
+        </cmmn:processTask>
+        
+        <cmmn:milestone id="Milestone_1" name="Dispute Resolved" />
+      </cmmn:stage>
+    </cmmn:casePlanModel>
+  </cmmn:case>
+  
+  <cmmndi:CMMNDI>
+    <cmmndi:CMMNDiagram id="CMMNDiagram_1">
+      <cmmndi:Size width="500" height="500" />
+      <cmmndi:CMMNShape id="DI_CasePlanModel_1" cmmnElementRef="CasePlanModel_1">
+        <dc:Bounds x="50" y="50" width="400" height="400" />
+      </cmmndi:CMMNShape>
+    </cmmndi:CMMNDiagram>
+  </cmmndi:CMMNDI>
+</cmmn:definitions> 

@@ -1,0 +1,62 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.9'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+    id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('camundaVersion', "7.19.0")
+}
+
+dependencies {
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // Camunda
+    implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter:${camundaVersion}"
+    implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-webapp:${camundaVersion}"
+    implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-rest:${camundaVersion}"
+    
+    // Database
+    runtimeOnly 'org.postgresql:postgresql'
+    
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    
+    // Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    
+    // Logging
+    implementation 'ch.qos.logback:logback-classic'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+// Prevent warnings with Gradle 8+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.remove('-Werror')
+} 

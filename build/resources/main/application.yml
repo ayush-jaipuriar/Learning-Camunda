@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/dispute_resolution
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+
+camunda:
+  bpm:
+    admin-user:
+      id: admin
+      password: admin
+      firstName: Admin
+    filter:
+      create: All Tasks
+    database:
+      type: postgres
+    webapp:
+      application-path: /camunda
+
+server:
+  port: 8080
+
+logging:
+  file:
+    name: logs/application.log
+  level:
+    root: INFO
+    com.example.drs: DEBUG
+    org.camunda.bpm: INFO
+
+app:
+  document:
+    upload-dir: C:/dispute_documents
+  audit:
+    file: logs/audit.log
+  error:
+    file: logs/error.log 
