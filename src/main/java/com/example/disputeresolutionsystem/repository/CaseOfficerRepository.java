@@ -17,4 +17,6 @@ public interface CaseOfficerRepository extends JpaRepository<CaseOfficer, Long> 
     
     @Query("SELECT o FROM CaseOfficer o WHERE o.currentWorkload < o.maxWorkload ORDER BY o.currentWorkload ASC")
     List<CaseOfficer> findAllAvailableOfficers();
+    
+    CaseOfficer findByUsername(String username);
 } 

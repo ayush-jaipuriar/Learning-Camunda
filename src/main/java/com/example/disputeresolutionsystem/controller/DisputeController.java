@@ -3,6 +3,7 @@ package com.example.disputeresolutionsystem.controller;
 import com.example.disputeresolutionsystem.dto.DisputeSubmissionRequest;
 import com.example.disputeresolutionsystem.dto.DisputeSubmissionResponse;
 import com.example.disputeresolutionsystem.model.Dispute;
+import com.example.disputeresolutionsystem.model.Document;
 import com.example.disputeresolutionsystem.repository.DisputeRepository;
 import com.example.disputeresolutionsystem.service.DisputeService;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -61,5 +68,40 @@ public class DisputeController {
         Dispute dispute = disputeRepository.findById(caseId)
                 .orElseThrow(() -> new RuntimeException("Dispute not found with ID: " + caseId));
         return ResponseEntity.ok(dispute);
+    }
+    
+    @GetMapping("/{caseId}/documents")
+    public ResponseEntity<Map<String, Object>> getDisputeDocuments(@PathVariable String caseId) {
+        Dispute dispute = disputeRepository.findById(caseId)
+                .orElseThrow(() -> new RuntimeException("Dispute not found with ID: " + caseId));
+        
+        Map<String, Object> response = new HashMap<>();
+        
+        if (dispute.getDocuments() == null || dispute.getDocuments().isEmpty()) {
+            response.put("hasDocuments", false);
+            return ResponseEntity.ok(response);
+        }
+        
+        Document document = dispute.getDocuments().get(0); // Get the first document
+        response.put("hasDocuments", true);
+        response.put("documentId", document.getId());
+        response.put("originalFilename", document.getOriginalFilename());
+        response.put("fileSize", document.getFileSize());
+        
+        try {
+            // Read file content
+            Path filePath = Paths.get(document.getFilePath());
+            if (Files.exists(filePath)) {
+                String content = new String(Files.readAllBytes(filePath));
+                response.put("content", content);
+            } else {
+                response.put("content", "File not found on server");
+            }
+        } catch (IOException e) {
+            log.error("Error reading document file", e);
+            response.put("content", "Error reading file: " + e.getMessage());
+        }
+        
+        return ResponseEntity.ok(response);
     }
 } 

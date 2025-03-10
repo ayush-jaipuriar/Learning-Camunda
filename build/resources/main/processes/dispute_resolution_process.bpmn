@@ -89,19 +89,56 @@
     <bpmn:userTask id="Activity_ReviewDispute" name="Review Dispute" camunda:assignee="${assignedOfficerUsername}">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="caseId" label="Case ID" type="string" />
-          <camunda:formField id="userId" label="User ID" type="string" />
-          <camunda:formField id="disputeType" label="Dispute Type" type="string" />
-          <camunda:formField id="creditReportId" label="Credit Report ID" type="string" />
-          <camunda:formField id="complexityLevel" label="Complexity Level" type="string" />
-          <camunda:formField id="priorityLevel" label="Priority Level" type="string" />
+          <camunda:formField id="caseId" label="Case ID" type="string" defaultValue="${caseId}">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="userId" label="User ID" type="string" defaultValue="${userId}">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="disputeType" label="Dispute Type" type="string" defaultValue="${disputeType}">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="creditReportId" label="Credit Report ID" type="string" defaultValue="${creditReportId}">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="complexityLevel" label="Complexity Level" type="string" defaultValue="${complexityLevel}">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="priorityLevel" label="Priority Level" type="string" defaultValue="${priorityLevel}">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="documentContent" label="Document Content" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+              <camunda:property id="controlType" value="textarea" />
+              <camunda:property id="rows" value="10" />
+            </camunda:properties>
+          </camunda:formField>
           <camunda:formField id="reviewDecision" label="Decision" type="enum">
             <camunda:value id="approve" name="Approve" />
             <camunda:value id="reject" name="Reject" />
             <camunda:value id="needMoreInfo" name="Need More Information" />
           </camunda:formField>
-          <camunda:formField id="reviewNotes" label="Notes" type="string" />
+          <camunda:formField id="reviewNotes" label="Notes" type="string">
+            <camunda:properties>
+              <camunda:property id="controlType" value="textarea" />
+              <camunda:property id="rows" value="3" />
+            </camunda:properties>
+          </camunda:formField>
         </camunda:formData>
+        <camunda:taskListener delegateExpression="${documentContentTaskListener}" event="create" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_AssignmentSuccess</bpmn:incoming>
       <bpmn:incoming>Flow_EscalationSuccess</bpmn:incoming>

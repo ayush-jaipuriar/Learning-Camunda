@@ -1,0 +1,1151 @@
+{
+	"info": {
+		"_postman_id": "c113897f-649f-4267-8e8c-da5e789749e9",
+		"name": "Dispute Resolution System Testing Old",
+		"description": "A collection for testing the Dispute Resolution System workflow end-to-end",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "9960081"
+	},
+	"item": [
+		{
+			"name": "1. Database Setup",
+			"item": [
+				{
+					"name": "Reset Case Officers",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset-officers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset-officers"
+							]
+						},
+						"description": "This is a helper endpoint that should be implemented to reset case officers data for testing"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Test Officers",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/create-officers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"create-officers"
+							]
+						},
+						"description": "This is a helper endpoint that should be implemented to create test officers"
+					},
+					"response": []
+				}
+			],
+			"description": "Setup the database with test data"
+		},
+		{
+			"name": "2. Simple Case Assignment",
+			"item": [
+				{
+					"name": "Submit Simple Dispute",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "user123",
+									"type": "text"
+								},
+								{
+									"key": "disputeType",
+									"value": "address correction",
+									"type": "text"
+								},
+								{
+									"key": "creditReportId",
+									"value": "CR-12345",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/path/to/simple_case_evidence.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Simple Dispute Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{simpleDisputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{simpleDisputeCaseId}}"
+							]
+						},
+						"description": "This endpoint should be implemented to retrieve dispute details"
+					},
+					"response": []
+				},
+				{
+					"name": "New Request",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Complex Case Assignment",
+			"item": [
+				{
+					"name": "Submit Complex Dispute",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "user456",
+									"type": "text"
+								},
+								{
+									"key": "disputeType",
+									"value": "complex bankruptcy issue",
+									"type": "text"
+								},
+								{
+									"key": "creditReportId",
+									"value": "CR-67890",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/path/to/complex_case_evidence.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Complex Dispute Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{complexDisputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{complexDisputeCaseId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. High-Risk Case Assignment",
+			"item": [
+				{
+					"name": "Submit High-Risk Dispute",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "user789",
+									"type": "text"
+								},
+								{
+									"key": "disputeType",
+									"value": "identity theft fraud alert",
+									"type": "text"
+								},
+								{
+									"key": "creditReportId",
+									"value": "CR-24680",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/path/to/high_risk_evidence.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get High-Risk Dispute Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{highRiskDisputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{highRiskDisputeCaseId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. No Available Officers Scenario",
+			"item": [
+				{
+					"name": "Set All Officers to Max Capacity",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/max-officer-capacity",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"max-officer-capacity"
+							]
+						},
+						"description": "This is a helper endpoint that should be implemented to set all officers to max capacity"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Dispute (No Available Officers)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "userNoOfficer",
+									"type": "text"
+								},
+								{
+									"key": "disputeType",
+									"value": "address correction",
+									"type": "text"
+								},
+								{
+									"key": "creditReportId",
+									"value": "CR-NOOFFICER",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/path/to/simple_case_evidence.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Escalated Dispute Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{escalatedDisputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{escalatedDisputeCaseId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6. Timer-Based Escalation",
+			"item": [
+				{
+					"name": "Reset Officer Workloads",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset-workloads",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset-workloads"
+							]
+						},
+						"description": "This is a helper endpoint that should be implemented to reset officer workloads"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Dispute for Timer Test",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "userTimer",
+									"type": "text"
+								},
+								{
+									"key": "disputeType",
+									"value": "address correction",
+									"type": "text"
+								},
+								{
+									"key": "creditReportId",
+									"value": "CR-TIMER",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/path/to/simple_case_evidence.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Simulate Timer Expiration",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/simulate-timer/{{timerDisputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"simulate-timer",
+								"{{timerDisputeCaseId}}"
+							]
+						},
+						"description": "This is a helper endpoint that should be implemented to simulate timer expiration"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Timer-Escalated Dispute Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{timerDisputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{timerDisputeCaseId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "7. Task Completion",
+			"item": [
+				{
+					"name": "Submit Dispute for Task Completion",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "userTaskComplete",
+									"type": "text"
+								},
+								{
+									"key": "disputeType",
+									"value": "address correction",
+									"type": "text"
+								},
+								{
+									"key": "creditReportId",
+									"value": "CR-COMPLETE",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/path/to/simple_case_evidence.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Task ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/by-case/{{taskCompletionCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"by-case",
+								"{{taskCompletionCaseId}}"
+							]
+						},
+						"description": "This endpoint should be implemented to get the task ID for a case"
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Task",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reviewDecision\": \"approve\",\n    \"reviewNotes\": \"Address correction verified with supporting documentation. Approved for update.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/{{taskId}}/complete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"{{taskId}}",
+								"complete"
+							]
+						},
+						"description": "This endpoint should be implemented to complete a task"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Completed Dispute Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{taskCompletionCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{taskCompletionCaseId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "8. Workload Distribution",
+			"item": [
+				{
+					"name": "Reset Officer Workloads",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset-workloads",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset-workloads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Dispute 1",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "userWorkload1",
+									"type": "text"
+								},
+								{
+									"key": "disputeType",
+									"value": "address correction",
+									"type": "text"
+								},
+								{
+									"key": "creditReportId",
+									"value": "CR-WL-1",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/path/to/simple_case_evidence.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Dispute 2",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "userWorkload2",
+									"type": "text"
+								},
+								{
+									"key": "disputeType",
+									"value": "address correction",
+									"type": "text"
+								},
+								{
+									"key": "creditReportId",
+									"value": "CR-WL-2",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/path/to/simple_case_evidence.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Dispute 3",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "userWorkload3",
+									"type": "text"
+								},
+								{
+									"key": "disputeType",
+									"value": "address correction",
+									"type": "text"
+								},
+								{
+									"key": "creditReportId",
+									"value": "CR-WL-3",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/path/to/simple_case_evidence.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Officer Workloads",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/officers/workloads",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"officers",
+								"workloads"
+							]
+						},
+						"description": "This endpoint should be implemented to get officer workloads"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "9. Manual Assignment",
+			"item": [
+				{
+					"name": "Set All Officers to Max Capacity",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/max-officer-capacity",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"max-officer-capacity"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Dispute for Manual Assignment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "userManual",
+									"type": "text"
+								},
+								{
+									"key": "disputeType",
+									"value": "address correction",
+									"type": "text"
+								},
+								{
+									"key": "creditReportId",
+									"value": "CR-MANUAL",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/path/to/simple_case_evidence.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Manual Assignment Task ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/manual-assignments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"manual-assignments"
+							]
+						},
+						"description": "This endpoint should be implemented to get manual assignment tasks"
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Manual Assignment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"manualAssignee\": \"john.doe\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/{{manualTaskId}}/complete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"{{manualTaskId}}",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Manually Assigned Dispute Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{manualAssignmentCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{manualAssignmentCaseId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "10. Scheduled Escalation",
+			"item": [
+				{
+					"name": "Reset Officer Workloads",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset-workloads",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset-workloads"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Unassigned Dispute",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/create-old-dispute",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"create-old-dispute"
+							]
+						},
+						"description": "This endpoint should be implemented to create an old unassigned dispute"
+					},
+					"response": []
+				},
+				{
+					"name": "Trigger Escalation Check",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/trigger-escalation-check",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"trigger-escalation-check"
+							]
+						},
+						"description": "This endpoint should be implemented to trigger the escalation check"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Scheduled Escalation Dispute Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/DRS-TEST-ESC",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"DRS-TEST-ESC"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Utility Endpoints",
+			"item": [
+				{
+					"name": "Get All Disputes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes"
+							]
+						},
+						"description": "This endpoint should be implemented to get all disputes"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Officers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/officers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"officers"
+							]
+						},
+						"description": "This endpoint should be implemented to get all officers"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tasks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks"
+							]
+						},
+						"description": "This endpoint should be implemented to get all tasks"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"if (pm.response.code === 200 && pm.response.json().caseId) {",
+					"    // Store case IDs in variables based on the request name",
+					"    if (pm.request.name.includes(\"Simple Dispute\")) {",
+					"        pm.collectionVariables.set(\"simpleDisputeCaseId\", pm.response.json().caseId);",
+					"    } else if (pm.request.name.includes(\"Complex Dispute\")) {",
+					"        pm.collectionVariables.set(\"complexDisputeCaseId\", pm.response.json().caseId);",
+					"    } else if (pm.request.name.includes(\"High-Risk Dispute\")) {",
+					"        pm.collectionVariables.set(\"highRiskDisputeCaseId\", pm.response.json().caseId);",
+					"    } else if (pm.request.name.includes(\"No Available Officers\")) {",
+					"        pm.collectionVariables.set(\"escalatedDisputeCaseId\", pm.response.json().caseId);",
+					"    } else if (pm.request.name.includes(\"Timer Test\")) {",
+					"        pm.collectionVariables.set(\"timerDisputeCaseId\", pm.response.json().caseId);",
+					"    } else if (pm.request.name.includes(\"Task Completion\")) {",
+					"        pm.collectionVariables.set(\"taskCompletionCaseId\", pm.response.json().caseId);",
+					"    } else if (pm.request.name.includes(\"Manual Assignment\")) {",
+					"        pm.collectionVariables.set(\"manualAssignmentCaseId\", pm.response.json().caseId);",
+					"    }",
+					"}",
+					"",
+					"// Store task IDs",
+					"if (pm.response.code === 200 && pm.response.json().taskId) {",
+					"    if (pm.request.name.includes(\"Get Task ID\")) {",
+					"        pm.collectionVariables.set(\"taskId\", pm.response.json().taskId);",
+					"    } else if (pm.request.name.includes(\"Manual Assignment Task\")) {",
+					"        pm.collectionVariables.set(\"manualTaskId\", pm.response.json().taskId);",
+					"    } else if (pm.request.name.includes(\"Manual Assignment Task\")) {",
+					"        pm.collectionVariables.set(\"manualTaskId\", pm.response.json().taskId);",
+					"    }",
+					"}",
+					"",
+					"// Basic response validation",
+					"pm.test(\"Status code is 200 OK\", function () {",
+					"    pm.response.to.have.status(200);",
+					"});",
+					"",
+					"// Log response for debugging",
+					"console.log(pm.response.json());"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "simpleDisputeCaseId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "complexDisputeCaseId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "highRiskDisputeCaseId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "escalatedDisputeCaseId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "timerDisputeCaseId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "taskCompletionCaseId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "manualAssignmentCaseId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "taskId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "manualTaskId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

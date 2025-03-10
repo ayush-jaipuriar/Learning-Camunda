@@ -28,8 +28,30 @@ public class TaskController {
     private final CaseOfficerRepository caseOfficerRepository;
 
     @GetMapping
-    public ResponseEntity<List<Map<String, Object>>> getAllTasks() {
-        List<Task> tasks = taskService.createTaskQuery().list();
+    public ResponseEntity<List<Map<String, Object>>> getAllTasks(@RequestParam(required = false) String username) {
+        List<Task> tasks;
+        
+        // Check if the user is an admin (supervisor)
+        boolean isAdmin = false;
+        if (username != null && !username.isEmpty()) {
+            CaseOfficer officer = caseOfficerRepository.findByUsername(username);
+            if (officer != null && officer.getLevel() == CaseOfficer.OfficerLevel.SUPERVISOR) {
+                isAdmin = true;
+            }
+        }
+        
+        // If admin, show all tasks, otherwise filter by assignee
+        if (isAdmin) {
+            tasks = taskService.createTaskQuery().list();
+        } else if (username != null && !username.isEmpty()) {
+            // For regular users, only show tasks assigned to them
+            tasks = taskService.createTaskQuery()
+                    .taskAssignee(username)
+                    .list();
+        } else {
+            // If no username provided, return empty list
+            tasks = List.of();
+        }
         
         List<Map<String, Object>> taskDetails = tasks.stream()
                 .map(task -> {
