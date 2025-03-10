@@ -109,3 +109,6 @@ yarn-error.log*
 .gradle/8.5/checksums/checksums.lock
 .gradle/8.5/checksums/md5-checksums.bin
 .gradle/8.5/checksums/sha1-checksums.bin
+.gradle/8.5/checksums/checksums.lock
+.gradle/8.5/checksums/md5-checksums.bin
+.gradle/8.5/checksums/sha1-checksums.bin
