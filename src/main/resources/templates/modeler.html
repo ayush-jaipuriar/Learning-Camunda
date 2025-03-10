@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPMN Process Modeler</title>
+    
+    <!-- BPMN-JS CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@9.3.1/dist/assets/diagram-js.css">
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js@9.3.1/dist/assets/bpmn-font/css/bpmn.css">
+    <link rel="stylesheet" href="https://unpkg.com/bpmn-js-properties-panel@1.1.1/dist/assets/properties-panel.css">
+    
+    <style>
+        html, body, #container {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .modeler-container {
+            display: flex;
+            height: 100%;
+        }
+        
+        #canvas {
+            flex: 1;
+            height: 100%;
+        }
+        
+        #properties-panel {
+            width: 300px;
+            overflow: auto;
+            border-left: 1px solid #ccc;
+        }
+        
+        .buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        
+        .btn {
+            background-color: #198754;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin-right: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            background-color: #157347;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5c636a;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background-color: #bb2d3b;
+        }
+        
+        #process-list {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            background-color: #198754;
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 2000;
+        }
+    </style>
+</head>
+<body>
+    <div class="modeler-container">
+        <div id="canvas"></div>
+        <div id="properties-panel"></div>
+    </div>
+    
+    <div id="process-list">
+        <select id="process-selector">
+            <option value="">-- Select a process --</option>
+        </select>
+    </div>
+    
+    <div class="buttons">
+        <button id="new-button" class="btn btn-secondary">New</button>
+        <button id="save-button" class="btn">Save</button>
+        <button id="deploy-button" class="btn">Save & Deploy</button>
+        <button id="download-button" class="btn btn-secondary">Download</button>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+    
+    <!-- BPMN-JS Scripts -->
+    <script src="https://unpkg.com/bpmn-js@9.3.1/dist/bpmn-modeler.development.js"></script>
+    <script src="https://unpkg.com/bpmn-js-properties-panel@1.1.1/dist/bpmn-js-properties-panel.umd.js"></script>
+    <script src="https://unpkg.com/camunda-bpmn-moddle@6.1.2/dist/camunda-bpmn-moddle.umd.js"></script>
+    
+    <script>
+        // Initialize the BPMN modeler
+        const modeler = new BpmnJS({
+            container: '#canvas',
+            propertiesPanel: {
+                parent: '#properties-panel'
+            },
+            additionalModules: [
+                BpmnPropertiesPanelModule,
+                BpmnPropertiesProviderModule,
+                CamundaPropertiesProviderModule
+            ],
+            moddleExtensions: {
+                camunda: CamundaBpmnModdle
+            }
+        });
+        
+        // Create a new diagram
+        function createNewDiagram() {
+            modeler.createDiagram();
+        }
+        
+        // Load an existing diagram
+        function loadDiagram(processKey) {
+            fetch(`/api/process-models/load/${processKey}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to load diagram');
+                    }
+                    return response.text();
+                })
+                .then(xml => {
+                    modeler.importXML(xml);
+                    showNotification(`Process '${processKey}' loaded successfully`);
+                })
+                .catch(error => {
+                    console.error('Error loading diagram:', error);
+                    showNotification('Error loading diagram', 'error');
+                });
+        }
+        
+        // Save the diagram
+        function saveDiagram(deploy = false) {
+            modeler.saveXML({ format: true })
+                .then(({ xml }) => {
+                    // Extract process key from XML
+                    const processKeyMatch = xml.match(/bpmn:process\s+id="([^"]+)"/);
+                    const processKey = processKeyMatch ? processKeyMatch[1] : '';
+                    
+                    if (!processKey) {
+                        showNotification('Process ID not found in diagram', 'error');
+                        return;
+                    }
+                    
+                    // Send to server
+                    return fetch('/api/process-models/save?processKey=' + processKey, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/xml'
+                        },
+                        body: xml
+                    });
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to save diagram');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    showNotification(`Process '${data.processKey}' saved${deploy ? ' and deployed' : ''} successfully`);
+                    loadProcessList();
+                })
+                .catch(error => {
+                    console.error('Error saving diagram:', error);
+                    showNotification('Error saving diagram', 'error');
+                });
+        }
+        
+        // Download the diagram
+        function downloadDiagram() {
+            modeler.saveXML({ format: true })
+                .then(({ xml }) => {
+                    const blob = new Blob([xml], { type: 'application/xml' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    
+                    // Extract process key from XML
+                    const processKeyMatch = xml.match(/bpmn:process\s+id="([^"]+)"/);
+                    const processKey = processKeyMatch ? processKeyMatch[1] : 'process';
+                    
+                    link.download = `${processKey}.bpmn`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                })
+                .catch(error => {
+                    console.error('Error downloading diagram:', error);
+                    showNotification('Error downloading diagram', 'error');
+                });
+        }
+        
+        // Load the list of available processes
+        function loadProcessList() {
+            fetch('/api/process-models/list')
+                .then(response => response.json())
+                .then(data => {
+                    const selector = document.getElementById('process-selector');
+                    
+                    // Clear existing options except the first one
+                    while (selector.options.length > 1) {
+                        selector.remove(1);
+                    }
+                    
+                    // Add new options
+                    data.models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model;
+                        option.textContent = model;
+                        selector.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading process list:', error);
+                });
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.backgroundColor = type === 'success' ? '#198754' : '#dc3545';
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Event listeners
+        document.getElementById('new-button').addEventListener('click', createNewDiagram);
+        document.getElementById('save-button').addEventListener('click', () => saveDiagram(false));
+        document.getElementById('deploy-button').addEventListener('click', () => saveDiagram(true));
+        document.getElementById('download-button').addEventListener('click', downloadDiagram);
+        
+        document.getElementById('process-selector').addEventListener('change', function() {
+            const processKey = this.value;
+            if (processKey) {
+                loadDiagram(processKey);
+            }
+        });
+        
+        // Initialize
+        createNewDiagram();
+        loadProcessList();
+    </script>
+</body>
+</html> 

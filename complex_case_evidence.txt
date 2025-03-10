@@ -1,0 +1,17 @@
+Customer Information:
+Name: Sarah Johnson
+Account Number: 987654321
+SSN: XXX-XX-5678
+
+Issue Description:
+I recently filed for Chapter 7 bankruptcy (Case #BK-2023-12345) and several accounts on my credit report have not been updated to reflect this status. Additionally, there are two accounts showing late payments that were included in the bankruptcy discharge.
+
+Supporting Information:
+- Bankruptcy was filed on 2023-05-15
+- Discharge was granted on 2023-08-20
+- The following accounts need to be updated:
+  1. ABC Bank (Account #1111-2222-3333-4444)
+  2. XYZ Financial (Account #5555-6666-7777-8888)
+  3. 123 Credit Union (Loan #99887766)
+
+I have attached a copy of my bankruptcy discharge papers and the schedule of accounts included in the filing.

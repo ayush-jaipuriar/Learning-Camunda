@@ -17,37 +17,173 @@
           <camunda:formField id="userId" label="User ID" type="string" />
           <camunda:formField id="disputeType" label="Dispute Type" type="string" />
           <camunda:formField id="creditReportId" label="Credit Report ID" type="string" />
+          <camunda:formField id="complexityLevel" label="Complexity Level" type="string" />
+          <camunda:formField id="priorityLevel" label="Priority Level" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:outgoing>Flow_1yw1yd9</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:sequenceFlow id="Flow_1yw1yd9" sourceRef="StartEvent_1" targetRef="Activity_1p9mxz9" />
-    <bpmn:userTask id="Activity_1p9mxz9" name="Review Dispute" camunda:assignee="admin">
+    
+    <bpmn:sequenceFlow id="Flow_1yw1yd9" sourceRef="StartEvent_1" targetRef="Activity_AssignCase" />
+    
+    <bpmn:serviceTask id="Activity_AssignCase" name="Assign Case to Officer" camunda:delegateExpression="${caseAssignmentDelegate}">
+      <bpmn:incoming>Flow_1yw1yd9</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToAssignmentGateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_ToAssignmentGateway" sourceRef="Activity_AssignCase" targetRef="Gateway_AssignmentCheck" />
+    
+    <bpmn:exclusiveGateway id="Gateway_AssignmentCheck" name="Assignment Successful?">
+      <bpmn:incoming>Flow_ToAssignmentGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_AssignmentSuccess</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AssignmentFailed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_AssignmentSuccess" name="Yes" sourceRef="Gateway_AssignmentCheck" targetRef="Activity_ReviewDispute">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${assignmentSuccessful == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_AssignmentFailed" name="No" sourceRef="Gateway_AssignmentCheck" targetRef="Activity_EscalateCase">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${assignmentSuccessful == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:serviceTask id="Activity_EscalateCase" name="Escalate Case" camunda:delegateExpression="${escalationDelegate}">
+      <bpmn:incoming>Flow_AssignmentFailed</bpmn:incoming>
+      <bpmn:incoming>Flow_FromTimer</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToEscalationGateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_ToEscalationGateway" sourceRef="Activity_EscalateCase" targetRef="Gateway_EscalationCheck" />
+    
+    <bpmn:exclusiveGateway id="Gateway_EscalationCheck" name="Escalation Successful?">
+      <bpmn:incoming>Flow_ToEscalationGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_EscalationSuccess</bpmn:outgoing>
+      <bpmn:outgoing>Flow_EscalationFailed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_EscalationSuccess" name="Yes" sourceRef="Gateway_EscalationCheck" targetRef="Activity_ReviewDispute">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${escalationSuccessful == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_EscalationFailed" name="No" sourceRef="Gateway_EscalationCheck" targetRef="Activity_ManualIntervention">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${escalationSuccessful == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:userTask id="Activity_ManualIntervention" name="Manual Case Assignment" camunda:assignee="admin">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="caseId" label="Case ID" type="string" />
+          <camunda:formField id="userId" label="User ID" type="string" />
+          <camunda:formField id="disputeType" label="Dispute Type" type="string" />
+          <camunda:formField id="complexityLevel" label="Complexity Level" type="string" />
+          <camunda:formField id="priorityLevel" label="Priority Level" type="string" />
+          <camunda:formField id="manualAssignee" label="Assign To" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_EscalationFailed</bpmn:incoming>
+      <bpmn:outgoing>Flow_FromManualAssignment</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <bpmn:sequenceFlow id="Flow_FromManualAssignment" sourceRef="Activity_ManualIntervention" targetRef="Activity_ReviewDispute" />
+    
+    <bpmn:userTask id="Activity_ReviewDispute" name="Review Dispute" camunda:assignee="${assignedOfficerUsername}">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="caseId" label="Case ID" type="string" />
           <camunda:formField id="userId" label="User ID" type="string" />
           <camunda:formField id="disputeType" label="Dispute Type" type="string" />
           <camunda:formField id="creditReportId" label="Credit Report ID" type="string" />
+          <camunda:formField id="complexityLevel" label="Complexity Level" type="string" />
+          <camunda:formField id="priorityLevel" label="Priority Level" type="string" />
+          <camunda:formField id="reviewDecision" label="Decision" type="enum">
+            <camunda:value id="approve" name="Approve" />
+            <camunda:value id="reject" name="Reject" />
+            <camunda:value id="needMoreInfo" name="Need More Information" />
+          </camunda:formField>
+          <camunda:formField id="reviewNotes" label="Notes" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1yw1yd9</bpmn:incoming>
+      <bpmn:incoming>Flow_AssignmentSuccess</bpmn:incoming>
+      <bpmn:incoming>Flow_EscalationSuccess</bpmn:incoming>
+      <bpmn:incoming>Flow_FromManualAssignment</bpmn:incoming>
       <bpmn:outgoing>Flow_0yvpi8r</bpmn:outgoing>
     </bpmn:userTask>
+    
+    <bpmn:boundaryEvent id="Event_Timer" name="4 Hours" attachedToRef="Activity_ReviewDispute">
+      <bpmn:outgoing>Flow_FromTimer</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_1">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT4H</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    
+    <bpmn:sequenceFlow id="Flow_FromTimer" sourceRef="Event_Timer" targetRef="Activity_EscalateCase" />
+    
     <bpmn:endEvent id="Event_0z47pf5" name="Dispute Processed">
       <bpmn:incoming>Flow_0yvpi8r</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_0yvpi8r" sourceRef="Activity_1p9mxz9" targetRef="Event_0z47pf5" />
+    
+    <bpmn:sequenceFlow id="Flow_0yvpi8r" sourceRef="Activity_ReviewDispute" targetRef="Event_0z47pf5" />
   </bpmn:process>
+  
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="dispute_resolution_process">
       <bpmndi:BPMNEdge id="Flow_1yw1yd9_di" bpmnElement="Flow_1yw1yd9">
         <di:waypoint x="215" y="117" />
         <di:waypoint x="270" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0yvpi8r_di" bpmnElement="Flow_0yvpi8r">
+      <bpmndi:BPMNEdge id="Flow_ToAssignmentGateway_di" bpmnElement="Flow_ToAssignmentGateway">
         <di:waypoint x="370" y="117" />
-        <di:waypoint x="432" y="117" />
+        <di:waypoint x="425" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AssignmentSuccess_di" bpmnElement="Flow_AssignmentSuccess">
+        <di:waypoint x="475" y="117" />
+        <di:waypoint x="650" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="554" y="99" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AssignmentFailed_di" bpmnElement="Flow_AssignmentFailed">
+        <di:waypoint x="450" y="142" />
+        <di:waypoint x="450" y="230" />
+        <di:waypoint x="510" y="230" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="458" y="183" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToEscalationGateway_di" bpmnElement="Flow_ToEscalationGateway">
+        <di:waypoint x="610" y="230" />
+        <di:waypoint x="665" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_EscalationSuccess_di" bpmnElement="Flow_EscalationSuccess">
+        <di:waypoint x="690" y="205" />
+        <di:waypoint x="690" y="157" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="698" y="178" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_EscalationFailed_di" bpmnElement="Flow_EscalationFailed">
+        <di:waypoint x="690" y="255" />
+        <di:waypoint x="690" y="320" />
+        <di:waypoint x="610" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="698" y="285" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FromManualAssignment_di" bpmnElement="Flow_FromManualAssignment">
+        <di:waypoint x="510" y="320" />
+        <di:waypoint x="450" y="320" />
+        <di:waypoint x="450" y="380" />
+        <di:waypoint x="700" y="380" />
+        <di:waypoint x="700" y="157" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FromTimer_di" bpmnElement="Flow_FromTimer">
+        <di:waypoint x="650" y="175" />
+        <di:waypoint x="560" y="175" />
+        <di:waypoint x="560" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0yvpi8r_di" bpmnElement="Flow_0yvpi8r">
+        <di:waypoint x="750" y="117" />
+        <di:waypoint x="812" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />
@@ -55,14 +191,44 @@
           <dc:Bounds x="158" y="142" width="89" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1p9mxz9_di" bpmnElement="Activity_1p9mxz9">
+      <bpmndi:BPMNShape id="Activity_AssignCase_di" bpmnElement="Activity_AssignCase">
         <dc:Bounds x="270" y="77" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0z47pf5_di" bpmnElement="Event_0z47pf5">
-        <dc:Bounds x="432" y="99" width="36" height="36" />
+      <bpmndi:BPMNShape id="Gateway_AssignmentCheck_di" bpmnElement="Gateway_AssignmentCheck" isMarkerVisible="true">
+        <dc:Bounds x="425" y="92" width="50" height="50" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="408" y="142" width="90" height="14" />
+          <dc:Bounds x="421" y="62" width="59" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_EscalateCase_di" bpmnElement="Activity_EscalateCase">
+        <dc:Bounds x="510" y="190" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_EscalationCheck_di" bpmnElement="Gateway_EscalationCheck" isMarkerVisible="true">
+        <dc:Bounds x="665" y="205" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="726" y="223" width="59" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ManualIntervention_di" bpmnElement="Activity_ManualIntervention">
+        <dc:Bounds x="510" y="280" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ReviewDispute_di" bpmnElement="Activity_ReviewDispute">
+        <dc:Bounds x="650" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0z47pf5_di" bpmnElement="Event_0z47pf5">
+        <dc:Bounds x="812" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="788" y="142" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Timer_di" bpmnElement="Event_Timer">
+        <dc:Bounds x="650" y="159" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="647" y="202" width="42" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>

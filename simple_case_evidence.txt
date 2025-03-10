@@ -1,0 +1,12 @@
+Customer Information:
+Name: John Smith
+Account Number: 123456789
+SSN: XXX-XX-1234
+
+Issue Description:
+There is an incorrect address listed on my credit report. My current address is 123 Main St, Anytown, USA 12345, but the report shows my old address from 3 years ago.
+
+Supporting Information:
+- I have lived at my current address for 2 years
+- I have updated my address with all my creditors
+- I have attached a copy of my utility bill showing my current address

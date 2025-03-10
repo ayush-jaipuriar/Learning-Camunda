@@ -47,7 +47,9 @@ public class DisputeServiceImpl implements DisputeService {
             dispute.setUserId(request.getUserId());
             dispute.setDisputeType(request.getDisputeType());
             dispute.setCreditReportId(request.getCreditReportId());
-            dispute.setPriorityLevel("MEDIUM"); // Default priority
+            
+            // Assess complexity and priority
+            assessDisputeComplexity(dispute);
 
             // Process documents
             processDocuments(request, dispute);
@@ -62,6 +64,8 @@ public class DisputeServiceImpl implements DisputeService {
                 variables.put("userId", request.getUserId());
                 variables.put("disputeType", request.getDisputeType());
                 variables.put("creditReportId", request.getCreditReportId());
+                variables.put("complexityLevel", dispute.getComplexityLevel().toString());
+                variables.put("priorityLevel", dispute.getPriorityLevel().toString());
 
                 runtimeService.startProcessInstanceByKey("dispute_resolution_process", caseId, variables);
                 log.info("Camunda process started successfully for case ID: {}", caseId);
@@ -117,5 +121,33 @@ public class DisputeServiceImpl implements DisputeService {
 
             dispute.getDocuments().add(document);
         }
+    }
+
+    /**
+     * Assess the complexity and priority of a dispute based on its type and other factors
+     */
+    private void assessDisputeComplexity(Dispute dispute) {
+        // Default values
+        Dispute.ComplexityLevel complexityLevel = Dispute.ComplexityLevel.SIMPLE;
+        Dispute.PriorityLevel priorityLevel = Dispute.PriorityLevel.MEDIUM;
+        
+        // Determine complexity based on dispute type
+        String disputeType = dispute.getDisputeType().toLowerCase();
+        
+        if (disputeType.contains("fraud") || disputeType.contains("identity theft")) {
+            complexityLevel = Dispute.ComplexityLevel.HIGH_RISK;
+            priorityLevel = Dispute.PriorityLevel.HIGH;
+        } else if (disputeType.contains("bankruptcy") || disputeType.contains("legal") || 
+                   disputeType.contains("complex") || disputeType.contains("multiple")) {
+            complexityLevel = Dispute.ComplexityLevel.COMPLEX;
+            priorityLevel = Dispute.PriorityLevel.MEDIUM;
+        }
+        
+        // Set the assessed values
+        dispute.setComplexityLevel(complexityLevel);
+        dispute.setPriorityLevel(priorityLevel);
+        
+        log.info("Dispute {} assessed as {} complexity with {} priority", 
+                dispute.getCaseId(), complexityLevel, priorityLevel);
     }
 } 
