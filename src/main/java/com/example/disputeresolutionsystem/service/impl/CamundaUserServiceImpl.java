@@ -167,6 +167,11 @@ public class CamundaUserServiceImpl implements CamundaUserService {
         return sanitized;
     }
     
+    @Override
+    public String getSanitizedUsername(String username) {
+        return sanitizeUsername(username);
+    }
+    
     private String getGroupIdForOfficerLevel(CaseOfficer.OfficerLevel level) {
         switch (level) {
             case LEVEL_1:
@@ -177,6 +182,71 @@ public class CamundaUserServiceImpl implements CamundaUserService {
                 return "supervisors";
             default:
                 return "officers";
+        }
+    }
+    
+    @Override
+    public void cleanupAllIdentityResources() {
+        try {
+            log.info("Starting cleanup of all Camunda identity resources");
+            
+            // Get all users
+            List<User> users = identityService.createUserQuery().list();
+            
+            // Get all groups
+            List<Group> groups = identityService.createGroupQuery().list();
+            
+            // Delete all memberships and users (except admin)
+            for (User user : users) {
+                String userId = user.getId();
+                
+                // Skip the admin user
+                if ("admin".equals(userId)) {
+                    log.info("Skipping admin user during cleanup");
+                    continue;
+                }
+                
+                // Delete all memberships for this user
+                for (Group group : groups) {
+                    try {
+                        identityService.deleteMembership(userId, group.getId());
+                    } catch (Exception e) {
+                        // Ignore errors if membership doesn't exist
+                        log.debug("Error deleting membership for user {} in group {}: {}", 
+                                userId, group.getId(), e.getMessage());
+                    }
+                }
+                
+                // Delete the user
+                try {
+                    identityService.deleteUser(userId);
+                    log.debug("Deleted Camunda user: {}", userId);
+                } catch (Exception e) {
+                    log.warn("Error deleting Camunda user {}: {}", userId, e.getMessage());
+                }
+            }
+            
+            // Delete all groups (except camunda-admin and other system groups)
+            for (Group group : groups) {
+                String groupId = group.getId();
+                
+                // Skip system groups
+                if ("camunda-admin".equals(groupId) || groupId.startsWith("system_")) {
+                    log.info("Skipping system group during cleanup: {}", groupId);
+                    continue;
+                }
+                
+                try {
+                    identityService.deleteGroup(groupId);
+                    log.debug("Deleted Camunda group: {}", groupId);
+                } catch (Exception e) {
+                    log.warn("Error deleting Camunda group {}: {}", groupId, e.getMessage());
+                }
+            }
+            
+            log.info("Completed cleanup of all Camunda identity resources");
+        } catch (Exception e) {
+            log.error("Error during cleanup of Camunda identity resources", e);
         }
     }
 } 

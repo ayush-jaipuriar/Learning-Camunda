@@ -4,6 +4,7 @@ import com.example.disputeresolutionsystem.model.CaseOfficer;
 import com.example.disputeresolutionsystem.model.Dispute;
 import com.example.disputeresolutionsystem.repository.CaseOfficerRepository;
 import com.example.disputeresolutionsystem.repository.DisputeRepository;
+import com.example.disputeresolutionsystem.service.CamundaUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.TaskService;
@@ -11,7 +12,7 @@ import org.camunda.bpm.engine.task.Task;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.transaction.Transactional;
+import jakarta.transaction.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ public class TaskController {
     private final TaskService taskService;
     private final DisputeRepository disputeRepository;
     private final CaseOfficerRepository caseOfficerRepository;
+    private final CamundaUserService camundaUserService;
 
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllTasks(@RequestParam(required = false) String username) {
@@ -137,8 +139,7 @@ public class TaskController {
             
             // Find the officer by username
             CaseOfficer officer = caseOfficerRepository.findAll().stream()
-                    .filter(o -> o.getUsername().equals(assigneeUsername) || 
-                                 sanitizeUsername(o.getUsername()).equals(assigneeUsername))
+                    .filter(o -> o.getUsername().equals(assigneeUsername))
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("Officer not found: " + assigneeUsername));
             
@@ -158,10 +159,12 @@ public class TaskController {
             caseOfficerRepository.save(officer);
             disputeRepository.save(dispute);
             
+            // Ensure the officer is properly synced with Camunda
+            camundaUserService.createCamundaUser(officer);
+            
             // Set process variables - use sanitized username for Camunda
-            String sanitizedUsername = sanitizeUsername(officer.getUsername());
             taskService.setVariable(taskId, "assignedOfficerId", officer.getId());
-            taskService.setVariable(taskId, "assignedOfficerUsername", sanitizedUsername);
+            taskService.setVariable(taskId, "assignedOfficerUsername", camundaUserService.getSanitizedUsername(officer.getUsername()));
             taskService.setVariable(taskId, "assignedOfficerLevel", officer.getLevel().toString());
         }
         
@@ -192,25 +195,5 @@ public class TaskController {
         response.put("caseId", caseId);
         
         return ResponseEntity.ok(response);
-    }
-    
-    /**
-     * Sanitize username to ensure it's valid for Camunda
-     */
-    private String sanitizeUsername(String username) {
-        // First, replace dots and other special characters with underscores
-        String sanitized = username.replaceAll("[^a-zA-Z0-9]", "_");
-        
-        // Ensure the ID starts with a letter (if it starts with a number, prepend 'user_')
-        if (sanitized.length() > 0 && !Character.isLetter(sanitized.charAt(0)) && sanitized.charAt(0) != '_') {
-            sanitized = "user_" + sanitized;
-        }
-        
-        // Ensure the ID is not empty
-        if (sanitized.isEmpty()) {
-            sanitized = "user_" + System.currentTimeMillis();
-        }
-        
-        return sanitized;
     }
 } 

@@ -28,4 +28,17 @@ public interface CamundaUserService {
      * @return true if successful, false otherwise
      */
     boolean deleteCamundaUser(String username);
+    
+    /**
+     * Clean up all Camunda identity resources (users, groups, memberships)
+     * This is useful for testing and resetting the system
+     */
+    void cleanupAllIdentityResources();
+    
+    /**
+     * Get the sanitized username for Camunda
+     * @param username Original username
+     * @return Sanitized username valid for Camunda
+     */
+    String getSanitizedUsername(String username);
 } 

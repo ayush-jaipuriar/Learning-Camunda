@@ -26,7 +26,7 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
     private final CaseOfficerRepository caseOfficerRepository;
     
     @Value("${app.dispute.escalation-hours:4}")
-    private int escalationHours;
+    private double escalationHours;
     
     @Override
     @Transactional
@@ -62,12 +62,14 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
     }
     
     @Override
-    @Scheduled(fixedRate = 60 * 60 * 1000) // Run every hour
+    @Scheduled(fixedRate = 60 * 1000) // Run every minute for testing
     @Transactional
     public void checkForEscalations() {
         log.info("Checking for disputes that need escalation...");
         
-        LocalDateTime escalationThreshold = LocalDateTime.now().minusHours(escalationHours);
+        // Convert hours to a time duration
+        long escalationMinutes = (long)(escalationHours * 60);
+        LocalDateTime escalationThreshold = LocalDateTime.now().minusMinutes(escalationMinutes);
         
         // Find disputes that are submitted but not assigned and older than the threshold
         List<Dispute> disputesToEscalate = disputeRepository.findByStatusAndSubmissionTimestampBefore("Submitted", escalationThreshold);

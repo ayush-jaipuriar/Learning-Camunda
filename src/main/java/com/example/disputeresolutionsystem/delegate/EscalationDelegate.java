@@ -2,6 +2,7 @@ package com.example.disputeresolutionsystem.delegate;
 
 import com.example.disputeresolutionsystem.model.Dispute;
 import com.example.disputeresolutionsystem.repository.DisputeRepository;
+import com.example.disputeresolutionsystem.service.CamundaUserService;
 import com.example.disputeresolutionsystem.service.CaseAssignmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ public class EscalationDelegate implements JavaDelegate {
 
     private final DisputeRepository disputeRepository;
     private final CaseAssignmentService caseAssignmentService;
+    private final CamundaUserService camundaUserService;
 
     @Override
     public void execute(DelegateExecution execution) throws Exception {
@@ -34,8 +36,12 @@ public class EscalationDelegate implements JavaDelegate {
         execution.setVariable("escalationSuccessful", escalationSuccessful);
         
         if (escalationSuccessful && dispute.getAssignedOfficer() != null) {
+            // Ensure the officer is properly synced with Camunda
+            camundaUserService.createCamundaUser(dispute.getAssignedOfficer());
+            
             execution.setVariable("assignedOfficerId", dispute.getAssignedOfficer().getId());
-            execution.setVariable("assignedOfficerUsername", dispute.getAssignedOfficer().getUsername());
+            execution.setVariable("assignedOfficerUsername", 
+                camundaUserService.getSanitizedUsername(dispute.getAssignedOfficer().getUsername()));
             execution.setVariable("assignedOfficerLevel", dispute.getAssignedOfficer().getLevel().toString());
             
             log.info("Dispute {} escalated and assigned to officer {} ({})", 

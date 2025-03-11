@@ -9,7 +9,7 @@
                   targetNamespace="http://bpmn.io/schema/bpmn"
                   exporter="Camunda Modeler"
                   exporterVersion="5.0.0">
-  <bpmn:process id="dispute_resolution_process" name="Dispute Resolution Process" isExecutable="true">
+  <bpmn:process id="dispute_resolution_process" name="Dispute Resolution Process" isExecutable="true" camunda:historyTimeToLive="30">
     <bpmn:startEvent id="StartEvent_1" name="Dispute Submitted">
       <bpmn:extensionElements>
         <camunda:formData>
@@ -146,10 +146,10 @@
       <bpmn:outgoing>Flow_0yvpi8r</bpmn:outgoing>
     </bpmn:userTask>
     
-    <bpmn:boundaryEvent id="Event_Timer" name="4 Hours" attachedToRef="Activity_ReviewDispute">
+    <bpmn:boundaryEvent id="Event_Timer" name="2 Minutes" attachedToRef="Activity_ReviewDispute">
       <bpmn:outgoing>Flow_FromTimer</bpmn:outgoing>
       <bpmn:timerEventDefinition id="TimerEventDefinition_1">
-        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT4H</bpmn:timeDuration>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
       </bpmn:timerEventDefinition>
     </bpmn:boundaryEvent>
     

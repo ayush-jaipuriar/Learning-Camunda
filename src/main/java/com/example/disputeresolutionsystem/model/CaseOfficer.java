@@ -1,7 +1,7 @@
 package com.example.disputeresolutionsystem.model;
 
 import lombok.Data;
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 

@@ -3,6 +3,7 @@ package com.example.disputeresolutionsystem.delegate;
 import com.example.disputeresolutionsystem.model.CaseOfficer;
 import com.example.disputeresolutionsystem.model.Dispute;
 import com.example.disputeresolutionsystem.repository.DisputeRepository;
+import com.example.disputeresolutionsystem.service.CamundaUserService;
 import com.example.disputeresolutionsystem.service.CaseAssignmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ public class CaseAssignmentDelegate implements JavaDelegate {
 
     private final DisputeRepository disputeRepository;
     private final CaseAssignmentService caseAssignmentService;
+    private final CamundaUserService camundaUserService;
 
     @Override
     public void execute(DelegateExecution execution) throws Exception {
@@ -32,9 +34,12 @@ public class CaseAssignmentDelegate implements JavaDelegate {
         CaseOfficer assignedOfficer = caseAssignmentService.assignDisputeToOfficer(dispute);
         
         if (assignedOfficer != null) {
+            // Ensure the officer is properly synced with Camunda
+            camundaUserService.createCamundaUser(assignedOfficer);
+            
             // Set process variables for the assigned officer
             execution.setVariable("assignedOfficerId", assignedOfficer.getId());
-            execution.setVariable("assignedOfficerUsername", assignedOfficer.getUsername());
+            execution.setVariable("assignedOfficerUsername", camundaUserService.getSanitizedUsername(assignedOfficer.getUsername()));
             execution.setVariable("assignedOfficerLevel", assignedOfficer.getLevel().toString());
             execution.setVariable("assignmentSuccessful", true);
             
