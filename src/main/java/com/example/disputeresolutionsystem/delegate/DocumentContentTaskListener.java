@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Slf4j
-@Component
+@Component("documentContentTaskListener")
 @RequiredArgsConstructor
 public class DocumentContentTaskListener implements TaskListener {
 

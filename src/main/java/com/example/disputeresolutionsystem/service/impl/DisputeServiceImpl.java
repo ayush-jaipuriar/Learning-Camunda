@@ -23,10 +23,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * This implementation is no longer needed as DisputeService is now a concrete class.
+ * This class is kept for reference but should be removed or refactored.
+ * @deprecated Use {@link com.example.disputeresolutionsystem.service.DisputeService} instead.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DisputeServiceImpl implements DisputeService {
+@Deprecated
+public class DisputeServiceImpl {
 
     private final DisputeRepository disputeRepository;
     private final RuntimeService runtimeService;
@@ -34,58 +40,13 @@ public class DisputeServiceImpl implements DisputeService {
     @Value("${app.document.upload-dir}")
     private String uploadDir;
 
-    @Override
-    @Transactional
+    /**
+     * This method is kept for reference but should be removed or refactored.
+     * @deprecated Use {@link com.example.disputeresolutionsystem.service.DisputeService#createDispute} instead.
+     */
+    @Deprecated
     public DisputeSubmissionResponse submitDispute(DisputeSubmissionRequest request) {
-        try {
-            // Generate case ID
-            String caseId = generateCaseId();
-
-            // Create dispute entity
-            Dispute dispute = new Dispute();
-            dispute.setCaseId(caseId);
-            dispute.setUserId(request.getUserId());
-            dispute.setDisputeType(request.getDisputeType());
-            dispute.setCreditReportId(request.getCreditReportId());
-            
-            // Assess complexity and priority
-            assessDisputeComplexity(dispute);
-
-            // Process documents
-            processDocuments(request, dispute);
-
-            // Save dispute
-            disputeRepository.save(dispute);
-
-            // Try to start Camunda process
-            try {
-                Map<String, Object> variables = new HashMap<>();
-                variables.put("caseId", caseId);
-                variables.put("userId", request.getUserId());
-                variables.put("disputeType", request.getDisputeType());
-                variables.put("creditReportId", request.getCreditReportId());
-                variables.put("complexityLevel", dispute.getComplexityLevel().toString());
-                variables.put("priorityLevel", dispute.getPriorityLevel().toString());
-
-                runtimeService.startProcessInstanceByKey("dispute_resolution_process", caseId, variables);
-                log.info("Camunda process started successfully for case ID: {}", caseId);
-            } catch (Exception e) {
-                log.warn("Failed to start Camunda process for case ID: {}. Error: {}", caseId, e.getMessage());
-                // Continue with dispute creation even if Camunda process fails
-            }
-
-            log.info("Dispute case created successfully with ID: {}", caseId);
-
-            return DisputeSubmissionResponse.builder()
-                    .caseId(caseId)
-                    .status("Submitted")
-                    .message("Dispute case created successfully")
-                    .build();
-
-        } catch (Exception e) {
-            log.error("Error processing dispute submission", e);
-            throw new RuntimeException("Failed to process dispute submission: " + e.getMessage());
-        }
+        throw new UnsupportedOperationException("This implementation is deprecated. Use DisputeService.createDispute instead.");
     }
 
     private String generateCaseId() {

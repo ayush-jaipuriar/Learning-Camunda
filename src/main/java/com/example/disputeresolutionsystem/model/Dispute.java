@@ -21,6 +21,23 @@ public class Dispute {
     private String creditReportId;
     private String status;
     
+    // User information from submitted document
+    @Column(length = 100)
+    private String submittedUserFullName;
+    
+    @Column(length = 255)
+    private String submittedUserAddress;
+    
+    @Column(length = 20)
+    private String submittedUserPhoneNumber;
+    
+    @Column(length = 100)
+    private String submittedUserEmailAddress;
+    
+    // Additional details about the dispute
+    @Column(length = 1000)
+    private String description;
+    
     @Enumerated(EnumType.STRING)
     private PriorityLevel priorityLevel;
     
@@ -41,6 +58,10 @@ public class Dispute {
     // Initialize with default value
     private boolean escalated = false;
     
+    // Store the result of PII validation
+    @Enumerated(EnumType.STRING)
+    private PIIValidationStatus piiValidationStatus = PIIValidationStatus.PENDING;
+    
     @OneToMany(mappedBy = "dispute", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Document> documents = new ArrayList<>();
     
@@ -57,6 +78,14 @@ public class Dispute {
         HIGH_RISK
     }
     
+    public enum PIIValidationStatus {
+        PENDING,      // Not yet reviewed
+        MISMATCH,     // PII data doesn't match system records
+        PARTIAL_MATCH, // Some fields match but not all
+        MATCH,        // All PII data matches system records
+        NOT_FOUND     // No matching user found in the system
+    }
+    
     @PrePersist
     public void prePersist() {
         if (status == null) {
@@ -67,6 +96,9 @@ public class Dispute {
         }
         if (complexityLevel == null) {
             complexityLevel = ComplexityLevel.SIMPLE;
+        }
+        if (piiValidationStatus == null) {
+            piiValidationStatus = PIIValidationStatus.PENDING;
         }
         // Initialize escalated field to false by default
         // This is just for new entities, existing ones will be handled by the SQL migration

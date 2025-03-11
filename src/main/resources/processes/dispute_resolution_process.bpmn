@@ -104,41 +104,84 @@
               <camunda:property id="readonly" value="true" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="creditReportId" label="Credit Report ID" type="string" defaultValue="${creditReportId}">
+          <camunda:formField id="piiValidationStatus" label="PII Validation Status" type="enum" defaultValue="PENDING">
+            <camunda:value id="PENDING" name="Pending Review" />
+            <camunda:value id="MISMATCH" name="Mismatch - Failed" />
+            <camunda:value id="PARTIAL_MATCH" name="Partial Match - Some Fields Match" />
+            <camunda:value id="MATCH" name="Match - All Fields Match" />
+            <camunda:value id="NOT_FOUND" name="Not Found - No Matching User" />
+          </camunda:formField>
+          <camunda:formField id="submittedUserFullName" label="Submitted Full Name" type="string">
             <camunda:properties>
               <camunda:property id="readonly" value="true" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="complexityLevel" label="Complexity Level" type="string" defaultValue="${complexityLevel}">
+          <camunda:formField id="databaseUserFullName" label="Database Full Name" type="string">
             <camunda:properties>
               <camunda:property id="readonly" value="true" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="priorityLevel" label="Priority Level" type="string" defaultValue="${priorityLevel}">
+          <camunda:formField id="fullNameMatch" label="Full Name Match" type="boolean">
             <camunda:properties>
               <camunda:property id="readonly" value="true" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="documentContent" label="Document Content" type="string">
+          <camunda:formField id="submittedUserAddress" label="Submitted Address" type="string">
             <camunda:properties>
               <camunda:property id="readonly" value="true" />
-              <camunda:property id="controlType" value="textarea" />
-              <camunda:property id="rows" value="10" />
             </camunda:properties>
           </camunda:formField>
+          <camunda:formField id="databaseUserAddress" label="Database Address" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="addressMatch" label="Address Match" type="boolean">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserPhoneNumber" label="Submitted Phone Number" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="databaseUserPhoneNumber" label="Database Phone Number" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="phoneNumberMatch" label="Phone Number Match" type="boolean">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserEmailAddress" label="Submitted Email Address" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="databaseUserEmailAddress" label="Database Email Address" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="emailMatch" label="Email Match" type="boolean">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="piiNotes" label="PII Validation Notes" type="string" />
           <camunda:formField id="reviewDecision" label="Decision" type="enum">
-            <camunda:value id="approve" name="Approve" />
-            <camunda:value id="reject" name="Reject" />
-            <camunda:value id="needMoreInfo" name="Need More Information" />
+            <camunda:value id="APPROVED" name="Approved" />
+            <camunda:value id="REJECTED" name="Rejected" />
+            <camunda:value id="NEED_MORE_INFO" name="Need More Information" />
           </camunda:formField>
-          <camunda:formField id="reviewNotes" label="Notes" type="string">
-            <camunda:properties>
-              <camunda:property id="controlType" value="textarea" />
-              <camunda:property id="rows" value="3" />
-            </camunda:properties>
-          </camunda:formField>
+          <camunda:formField id="notes" label="Review Notes" type="string" />
         </camunda:formData>
-        <camunda:taskListener delegateExpression="${documentContentTaskListener}" event="create" />
+        
+        <camunda:taskListener event="create" delegateExpression="${documentContentTaskListener}" />
+        <camunda:taskListener event="create" delegateExpression="${piiComparisonTaskListener}" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_AssignmentSuccess</bpmn:incoming>
       <bpmn:incoming>Flow_EscalationSuccess</bpmn:incoming>

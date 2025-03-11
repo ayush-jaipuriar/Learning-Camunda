@@ -174,6 +174,26 @@ public class TaskController {
             Dispute dispute = disputeRepository.findById(caseId)
                     .orElseThrow(() -> new RuntimeException("Dispute not found: " + caseId));
             
+            // Update PII validation status if provided
+            if (variables.containsKey("piiValidationStatus")) {
+                String status = variables.get("piiValidationStatus").toString();
+                try {
+                    Dispute.PIIValidationStatus piiStatus = Dispute.PIIValidationStatus.valueOf(status);
+                    dispute.setPiiValidationStatus(piiStatus);
+                    
+                    // If there are PII notes, save them as well
+                    if (variables.containsKey("piiNotes")) {
+                        String notes = variables.get("piiNotes").toString();
+                        // Save PII notes (could be added to a new field in Dispute or a separate table)
+                        log.info("PII Validation Notes for {}: {}", caseId, notes);
+                    }
+                    
+                    log.info("Updated PII validation status for dispute {} to {}", caseId, status);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid PII validation status: {}", status);
+                }
+            }
+            
             // Update dispute status based on decision
             if (variables.containsKey("reviewDecision")) {
                 String decision = variables.get("reviewDecision").toString();

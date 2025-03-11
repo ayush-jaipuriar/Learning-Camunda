@@ -6,6 +6,7 @@ import com.example.disputeresolutionsystem.repository.CaseOfficerRepository;
 import com.example.disputeresolutionsystem.repository.DisputeRepository;
 import com.example.disputeresolutionsystem.service.CamundaUserService;
 import com.example.disputeresolutionsystem.service.CaseAssignmentService;
+import com.example.disputeresolutionsystem.service.UserPIIService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.IdentityService;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -34,12 +36,18 @@ public class TestController {
     private final TaskService taskService;
     private final CamundaUserService camundaUserService;
     private final IdentityService identityService;
+    private final UserPIIService userPIIService;
 
     @PostMapping("/reset-officers")
     @Transactional
     public ResponseEntity<Map<String, String>> resetOfficers() {
         // Get all officers before deleting
         List<CaseOfficer> officers = caseOfficerRepository.findAll();
+        
+        // Delete PII data for all officers first
+        for (CaseOfficer officer : officers) {
+            userPIIService.deletePIIForOfficer(officer.getId());
+        }
         
         // Delete all existing officers
         caseOfficerRepository.deleteAll();
@@ -54,7 +62,7 @@ public class TestController {
         
         Map<String, String> response = new HashMap<>();
         response.put("status", "success");
-        response.put("message", "All case officers have been deleted and Camunda identity resources cleaned up");
+        response.put("message", "All case officers and associated PII data have been deleted and Camunda identity resources cleaned up");
         
         return ResponseEntity.ok(response);
     }
@@ -74,12 +82,17 @@ public class TestController {
         // Save officers to database
         caseOfficerRepository.saveAll(officers);
         
+        // Create dummy PII data for each officer
+        for (CaseOfficer officer : officers) {
+            userPIIService.createDummyPIIForOfficer(officer);
+        }
+        
         // Sync officers with Camunda users
         int syncCount = camundaUserService.syncOfficersWithCamundaUsers(officers);
         
         Map<String, Object> response = new HashMap<>();
         response.put("status", "success");
-        response.put("message", "Test officers created successfully");
+        response.put("message", "Test officers created successfully with dummy PII data");
         response.put("officers", officers);
         response.put("syncedWithCamunda", syncCount);
         
@@ -253,6 +266,83 @@ public class TestController {
             response.put("message", "Error creating admin user: " + e.getMessage());
             return ResponseEntity.status(500).body(response);
         }
+    }
+
+    @PostMapping("/create-test-users")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> createTestUsers() {
+        log.info("Creating test users with PII data");
+        
+        Map<String, Object> response = new HashMap<>();
+        List<Map<String, String>> createdUsers = new ArrayList<>();
+        
+        // Get all officers
+        List<CaseOfficer> officers = caseOfficerRepository.findAll();
+        if (officers.isEmpty()) {
+            response.put("status", "error");
+            response.put("message", "No officers found. Please create officers first.");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        // Get the first officer to associate with the test users
+        CaseOfficer officer = officers.get(0);
+        
+        // Create john_user1 with exact matching data from the sample
+        UserPII johnUser = new UserPII();
+        johnUser.setUsername("john_user1");
+        johnUser.setFullName("John Doe");
+        johnUser.setAddress("123 Main St, Anytown, CA 92345");
+        johnUser.setPhoneNumber("555-123-4567");
+        johnUser.setEmailAddress("john_user1@example.com");
+        johnUser.setSsn("123-45-6789");
+        johnUser.setDateOfBirth("01/15/1980");
+        johnUser.setCaseOfficer(officer);
+        userPIIService.saveUserPII(johnUser);
+        
+        Map<String, String> johnUserMap = new HashMap<>();
+        johnUserMap.put("username", johnUser.getUsername());
+        johnUserMap.put("fullName", johnUser.getFullName());
+        createdUsers.add(johnUserMap);
+        
+        // Create jane_user2 with exact matching data from the sample
+        UserPII janeUser = new UserPII();
+        janeUser.setUsername("jane_user2");
+        janeUser.setFullName("Jane Smith");
+        janeUser.setAddress("456 Oak Ave, Springfield, IL 62701");
+        janeUser.setPhoneNumber("555-234-5678");
+        janeUser.setEmailAddress("jane_user2@example.com");
+        janeUser.setSsn("234-56-7890");
+        janeUser.setDateOfBirth("02/20/1985");
+        janeUser.setCaseOfficer(officer);
+        userPIIService.saveUserPII(janeUser);
+        
+        Map<String, String> janeUserMap = new HashMap<>();
+        janeUserMap.put("username", janeUser.getUsername());
+        janeUserMap.put("fullName", janeUser.getFullName());
+        createdUsers.add(janeUserMap);
+        
+        // Create mike_user3 with exact matching data from the sample
+        UserPII mikeUser = new UserPII();
+        mikeUser.setUsername("mike_user3");
+        mikeUser.setFullName("Michael Johnson");
+        mikeUser.setAddress("789 Pine Rd, Liberty, NY 10001");
+        mikeUser.setPhoneNumber("555-345-6789");
+        mikeUser.setEmailAddress("mike_user3@example.com");
+        mikeUser.setSsn("345-67-8901");
+        mikeUser.setDateOfBirth("03/25/1990");
+        mikeUser.setCaseOfficer(officer);
+        userPIIService.saveUserPII(mikeUser);
+        
+        Map<String, String> mikeUserMap = new HashMap<>();
+        mikeUserMap.put("username", mikeUser.getUsername());
+        mikeUserMap.put("fullName", mikeUser.getFullName());
+        createdUsers.add(mikeUserMap);
+        
+        response.put("status", "success");
+        response.put("message", "Created test users with PII data");
+        response.put("users", createdUsers);
+        
+        return ResponseEntity.ok(response);
     }
 
     private CaseOfficer createOfficer(String username, String fullName, String email, 

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispute Review</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">Dispute Review</h1>
+        
+        <!-- Error container -->
+        <div id="errorContainer" style="display: none;"></div>
+        
+        <!-- Dispute Details -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Dispute Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Case ID:</strong> <span id="caseIdDisplay"></span></p>
+                        <p><strong>Dispute Type:</strong> <span id="disputeTypeDisplay"></span></p>
+                        <p><strong>Status:</strong> <span id="statusDisplay"></span></p>
+                        <p><strong>Priority:</strong> <span id="priorityDisplay"></span></p>
+                        <p><strong>Complexity:</strong> <span id="complexityDisplay"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Submission Date:</strong> <span id="submissionDateDisplay"></span></p>
+                        <p><strong>Assignment Date:</strong> <span id="assignmentDateDisplay"></span></p>
+                        <p><strong>Assigned Officer:</strong> <span id="assignedOfficerDisplay"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- User Information -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">User Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>User ID:</strong> <span id="userIdDisplay"></span></p>
+                        <p><strong>Full Name:</strong> <span id="userFullNameDisplay"></span></p>
+                        <p><strong>Address:</strong> <span id="userAddressDisplay"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Phone Number:</strong> <span id="userPhoneDisplay"></span></p>
+                        <p><strong>Email Address:</strong> <span id="userEmailDisplay"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Description -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Description</h5>
+            </div>
+            <div class="card-body">
+                <p id="descriptionDisplay"></p>
+            </div>
+        </div>
+        
+        <!-- PII Comparison Container -->
+        <div id="piiComparisonContainer"></div>
+        
+        <!-- Action Buttons -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Actions</h5>
+            </div>
+            <div class="card-body">
+                <button id="approveBtn" class="btn btn-success mr-2">Approve</button>
+                <button id="rejectBtn" class="btn btn-danger mr-2">Reject</button>
+                <button id="requestMoreInfoBtn" class="btn btn-warning">Request More Information</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script th:src="@{/js/components/PIIComparisonComponent.js}"></script>
+    <script th:src="@{/js/dispute-review.js}"></script>
+</body>
+</html> 
