@@ -1,0 +1,789 @@
+{
+	"info": {
+		"_postman_id": "a5b7c9d0-e2f4-6g8h-i0j2-k4l6m8n0p2q4",
+		"name": "Dispute Resolution System E2E",
+		"description": "End-to-end testing flows for the dispute resolution system, including dispute processing, SLA monitoring, audit trail, and compliance reporting",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "1. Dispute Processing Flow",
+			"item": [
+				{
+					"name": "Submit New Dispute",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.caseId) {",
+									"    pm.collectionVariables.set(\"disputeCaseId\", jsonData.caseId);",
+									"    console.log(\"Set dispute case ID to: \" + jsonData.caseId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"john_user1\",\n    \"disputeType\": \"incorrect_info\",\n    \"creditReportId\": \"CR-E2E-TEST\",\n    \"userFullName\": \"John Doe\",\n    \"userAddress\": \"123 Main St, Anytown, CA 92345\",\n    \"userPhoneNumber\": \"555-123-4567\",\n    \"userEmailAddress\": \"john_user1@example.com\",\n    \"description\": \"This is a test dispute for E2E testing.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						},
+						"description": "Create a new dispute to initiate the process"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dispute Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{disputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{disputeCaseId}}"
+							]
+						},
+						"description": "Retrieve details of the created dispute"
+					},
+					"response": []
+				},
+				{
+					"name": "Set SLA Deadline (1 min from now)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/set-sla-deadline/{{disputeCaseId}}/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"set-sla-deadline",
+								"{{disputeCaseId}}",
+								"1"
+							]
+						},
+						"description": "Set the SLA deadline to 1 minute from now for testing"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Dispute Creation in Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/disputes/{{disputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{disputeCaseId}}"
+							]
+						},
+						"description": "Verify that dispute creation was properly logged"
+					},
+					"response": []
+				}
+			],
+			"description": "Basic dispute creation and validation flow"
+		},
+		{
+			"name": "2. SLA Monitoring Flow",
+			"item": [
+				{
+					"name": "Trigger SLA Monitoring",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/monitor-sla",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"monitor-sla"
+							]
+						},
+						"description": "Trigger the SLA monitoring process manually"
+					},
+					"response": []
+				},
+				{
+					"name": "Check SLA Status After Monitoring",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{disputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{disputeCaseId}}"
+							]
+						},
+						"description": "Check if dispute status has been updated by SLA monitoring"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify SLA Monitoring in Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/disputes/{{disputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"audit",
+								"disputes",
+								"{{disputeCaseId}}"
+							]
+						},
+						"description": "Verify that SLA monitoring actions were logged"
+					},
+					"response": []
+				},
+				{
+					"name": "Check SLA Violation Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/actions/SLA_VIOLATION?startDate={{isoStartDate}}&endDate={{isoEndDate}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"audit",
+								"actions",
+								"SLA_VIOLATION"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "{{isoStartDate}}"
+								},
+								{
+									"key": "endDate",
+									"value": "{{isoEndDate}}"
+								}
+							]
+						},
+						"description": "Check for SLA violations in the audit logs"
+					},
+					"response": []
+				},
+				{
+					"name": "Simulate Timer Expiration",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/simulate-timer/{{disputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"simulate-timer",
+								"{{disputeCaseId}}"
+							]
+						},
+						"description": "Simulate the expiration of an SLA timer"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Escalation in Dispute Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{disputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{disputeCaseId}}"
+							]
+						},
+						"description": "Verify that the dispute was escalated after timer expiration"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify Escalation in Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/actions/ESCALATION?startDate={{isoStartDate}}&endDate={{isoEndDate}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"audit",
+								"actions",
+								"ESCALATION"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "{{isoStartDate}}"
+								},
+								{
+									"key": "endDate",
+									"value": "{{isoEndDate}}"
+								}
+							]
+						},
+						"description": "Verify that the escalation was properly logged"
+					},
+					"response": []
+				}
+			],
+			"description": "Testing the SLA monitoring and escalation process"
+		},
+		{
+			"name": "3. Report Generation Flow",
+			"item": [
+				{
+					"name": "Generate Monthly Report",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.reportId) {",
+									"    pm.collectionVariables.set(\"reportId\", jsonData.reportId);",
+									"    console.log(\"Set report ID to: \" + jsonData.reportId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/monthly?year={{currentYear}}&month={{currentMonth}}&format=JSON",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"monthly"
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "{{currentYear}}"
+								},
+								{
+									"key": "month",
+									"value": "{{currentMonth}}"
+								},
+								{
+									"key": "format",
+									"value": "JSON"
+								}
+							]
+						},
+						"description": "Generate a monthly compliance report"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Report Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/{{reportId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"{{reportId}}"
+							]
+						},
+						"description": "Retrieve the details of the generated report"
+					},
+					"response": []
+				},
+				{
+					"name": "Download Report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/{{reportId}}/download",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"{{reportId}}",
+								"download"
+							]
+						},
+						"description": "Download the report file"
+					},
+					"response": []
+				},
+				{
+					"name": "Distribute Report",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/{{reportId}}/distribute?recipients=admin@example.com,manager@example.com",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"{{reportId}}",
+								"distribute"
+							],
+							"query": [
+								{
+									"key": "recipients",
+									"value": "admin@example.com,manager@example.com"
+								}
+							]
+						},
+						"description": "Distribute the report to recipients"
+					},
+					"response": []
+				}
+			],
+			"description": "Testing the report generation and distribution process"
+		},
+		{
+			"name": "4. Camunda Process Flow",
+			"item": [
+				{
+					"name": "Start Report Generation Process",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.processInstanceId) {",
+									"    pm.collectionVariables.set(\"processInstanceId\", jsonData.processInstanceId);",
+									"    console.log(\"Set process instance ID to: \" + jsonData.processInstanceId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/process/start?year={{currentYear}}&month={{currentMonth}}&format=JSON&recipients=admin@example.com",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"process",
+								"start"
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "{{currentYear}}"
+								},
+								{
+									"key": "month",
+									"value": "{{currentMonth}}"
+								},
+								{
+									"key": "format",
+									"value": "JSON"
+								},
+								{
+									"key": "recipients",
+									"value": "admin@example.com"
+								}
+							]
+						},
+						"description": "Start the Camunda report generation process"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Process Instance Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/process-instance/{{processInstanceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"process-instance",
+								"{{processInstanceId}}"
+							]
+						},
+						"description": "Check the status of the Camunda process instance"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Active Tasks for Process",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/task?processInstanceId={{processInstanceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"task"
+							],
+							"query": [
+								{
+									"key": "processInstanceId",
+									"value": "{{processInstanceId}}"
+								}
+							]
+						},
+						"description": "Get the active tasks for the process instance"
+					},
+					"response": []
+				},
+				{
+					"name": "Complete User Task (If Any)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Fetch the task ID first",
+									"pm.sendRequest({",
+									"    url: pm.variables.get(\"baseUrl\") + \"/engine-rest/task?processInstanceId=\" + pm.variables.get(\"processInstanceId\"),",
+									"    method: 'GET'",
+									"}, function (err, res) {",
+									"    if (!err && res.json().length > 0) {",
+									"        pm.variables.set(\"taskId\", res.json()[0].id);",
+									"        console.log(\"Found task ID: \" + res.json()[0].id);",
+									"    } else {",
+									"        console.log(\"No tasks found or error occurred\");",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"variables\": {\n        \"approved\": { \"value\": true },\n        \"revisionNotes\": { \"value\": \"This report looks good\" }\n    }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/task/{{taskId}}/complete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"task",
+								"{{taskId}}",
+								"complete"
+							]
+						},
+						"description": "Complete a user task in the process"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Process History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/history/activity-instance?processInstanceId={{processInstanceId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"history",
+								"activity-instance"
+							],
+							"query": [
+								{
+									"key": "processInstanceId",
+									"value": "{{processInstanceId}}"
+								}
+							]
+						},
+						"description": "Get the history of activities in the process"
+					},
+					"response": []
+				}
+			],
+			"description": "Testing the Camunda workflow process for report generation"
+		},
+		{
+			"name": "5. Audit & Compliance Flow",
+			"item": [
+				{
+					"name": "Get All Action Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/action-types",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"audit",
+								"action-types"
+							]
+						},
+						"description": "Get all available audit action types"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Audit Trail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/users/john_user1?startDate={{isoStartDate}}&endDate={{isoEndDate}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"audit",
+								"users",
+								"john_user1"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "{{isoStartDate}}"
+								},
+								{
+									"key": "endDate",
+									"value": "{{isoEndDate}}"
+								}
+							]
+						},
+						"description": "Get the audit trail for a specific user"
+					},
+					"response": []
+				},
+				{
+					"name": "Get SLA Violations Statistics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/violations/stats?startDate={{isoStartDate}}&endDate={{isoEndDate}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"audit",
+								"violations",
+								"stats"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "{{isoStartDate}}"
+								},
+								{
+									"key": "endDate",
+									"value": "{{isoEndDate}}"
+								}
+							]
+						},
+						"description": "Get statistics about SLA violations"
+					},
+					"response": []
+				},
+				{
+					"name": "Retry Failed Report Distributions",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/retry-distributions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"retry-distributions"
+							]
+						},
+						"description": "Retry any failed report distributions"
+					},
+					"response": []
+				}
+			],
+			"description": "Testing the audit and compliance features"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set current date info",
+					"const now = new Date();",
+					"pm.collectionVariables.set(\"currentYear\", now.getFullYear());",
+					"pm.collectionVariables.set(\"currentMonth\", now.getMonth() + 1);",
+					"",
+					"// Set ISO formatted dates for queries",
+					"const startDate = new Date();",
+					"startDate.setDate(startDate.getDate() - 7); // A week ago",
+					"",
+					"const endDate = new Date();",
+					"endDate.setDate(endDate.getDate() + 1); // Tomorrow",
+					"",
+					"pm.collectionVariables.set(\"isoStartDate\", startDate.toISOString().split('T')[0] + \"T00:00:00\");",
+					"pm.collectionVariables.set(\"isoEndDate\", endDate.toISOString().split('T')[0] + \"T23:59:59\");"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "disputeCaseId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reportId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "processInstanceId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "taskId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "currentYear",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "currentMonth",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "isoStartDate",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "isoEndDate",
+			"value": "",
+			"type": "string"
+		}
+	]
+} 

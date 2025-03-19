@@ -1,0 +1,375 @@
+{
+	"info": {
+		"_postman_id": "e7c8f9d0-1a2b-3c4d-5e6f-7g8h9i0j1k2l",
+		"name": "Reporting and Audit",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "Reporting",
+			"item": [
+				{
+					"name": "Generate Monthly Report",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/monthly?year=2023&month=3&format=JSON",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"monthly"
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "2023"
+								},
+								{
+									"key": "month",
+									"value": "3"
+								},
+								{
+									"key": "format",
+									"value": "JSON"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Report by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/{{reportId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"{{reportId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download Report",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/{{reportId}}/download",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"{{reportId}}",
+								"download"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Distribute Report",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/{{reportId}}/distribute?recipients=admin@example.com,manager@example.com",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"{{reportId}}",
+								"distribute"
+							],
+							"query": [
+								{
+									"key": "recipients",
+									"value": "admin@example.com,manager@example.com"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Start Report Process",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/process/start?year=2023&month=3&format=JSON&recipients=admin@example.com",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"process",
+								"start"
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "2023"
+								},
+								{
+									"key": "month",
+									"value": "3"
+								},
+								{
+									"key": "format",
+									"value": "JSON"
+								},
+								{
+									"key": "recipients",
+									"value": "admin@example.com"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get SLA Violation Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/violations/stats?startDate=2023-01-01T00:00:00&endDate=2023-12-31T23:59:59",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"violations",
+								"stats"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2023-01-01T00:00:00"
+								},
+								{
+									"key": "endDate",
+									"value": "2023-12-31T23:59:59"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retry Failed Distributions",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/reports/retry-distributions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reports",
+								"retry-distributions"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Audit",
+			"item": [
+				{
+					"name": "Get Dispute Audit History",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/disputes/{{disputeCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"audit",
+								"disputes",
+								"{{disputeCaseId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Action Type Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/actions/SLA_VIOLATION?startDate=2023-01-01T00:00:00&endDate=2023-12-31T23:59:59",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"audit",
+								"actions",
+								"SLA_VIOLATION"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2023-01-01T00:00:00"
+								},
+								{
+									"key": "endDate",
+									"value": "2023-12-31T23:59:59"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/users/john_user1?startDate=2023-01-01T00:00:00&endDate=2023-12-31T23:59:59",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"audit",
+								"users",
+								"john_user1"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2023-01-01T00:00:00"
+								},
+								{
+									"key": "endDate",
+									"value": "2023-12-31T23:59:59"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get SLA Violation Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/violations/stats?startDate=2023-01-01T00:00:00&endDate=2023-12-31T23:59:59",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"audit",
+								"violations",
+								"stats"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2023-01-01T00:00:00"
+								},
+								{
+									"key": "endDate",
+									"value": "2023-12-31T23:59:59"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Action Types",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/audit/action-types",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"audit",
+								"action-types"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"if (pm.response.code === 200 && pm.info.requestName.includes(\"Generate Monthly Report\")) {",
+					"    var responseData = pm.response.json();",
+					"    if (responseData.reportId) {",
+					"        pm.collectionVariables.set(\"reportId\", responseData.reportId);",
+					"        console.log(\"Set report ID to: \" + responseData.reportId);",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "reportId",
+			"value": ""
+		},
+		{
+			"key": "disputeCaseId",
+			"value": ""
+		}
+	]
+} 

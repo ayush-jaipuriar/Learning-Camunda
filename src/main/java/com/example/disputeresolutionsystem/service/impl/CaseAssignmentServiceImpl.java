@@ -5,6 +5,7 @@ import com.example.disputeresolutionsystem.model.Dispute;
 import com.example.disputeresolutionsystem.repository.CaseOfficerRepository;
 import com.example.disputeresolutionsystem.repository.DisputeRepository;
 import com.example.disputeresolutionsystem.service.CaseAssignmentService;
+import com.example.disputeresolutionsystem.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,9 +25,20 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
 
     private final DisputeRepository disputeRepository;
     private final CaseOfficerRepository caseOfficerRepository;
+    private final NotificationService notificationService;
     
     @Value("${app.dispute.escalation-hours:4}")
     private double escalationHours;
+    
+    // Add SLA related settings (minutes for testing purpose)
+    @Value("${app.dispute.sla.reminder-threshold-minutes:2}")
+    private int reminderThresholdMinutes;
+    
+    @Value("${app.dispute.sla.compliance-report-threshold-minutes:10}")
+    private int complianceReportThresholdMinutes;
+    
+    @Value("${app.dispute.sla.max-reminders:3}")
+    private int maxReminders;
     
     @Override
     @Transactional
@@ -115,6 +127,9 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
             supervisorOfficer.setCurrentWorkload(supervisorOfficer.getCurrentWorkload() + 1);
             caseOfficerRepository.save(supervisorOfficer);
             
+            // Send escalation notification
+            notificationService.sendEscalationNotification(dispute, supervisorOfficer);
+            
             log.info("Dispute {} escalated and assigned to supervisor {}", dispute.getCaseId(), supervisorOfficer.getUsername());
         } else {
             dispute.setStatus("Escalated - Pending Assignment");
@@ -123,6 +138,64 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         
         disputeRepository.save(dispute);
         return true;
+    }
+    
+    @Override
+    @Scheduled(fixedRate = 30 * 1000) // Run every 30 seconds for testing
+    @Transactional
+    public void monitorSLAViolations() {
+        log.info("Checking for SLA violations and sending reminders...");
+        
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Find active disputes (not resolved)
+        List<Dispute> activeDisputes = disputeRepository.findByStatusNot("Resolved");
+        
+        int remindersCount = 0;
+        int violationsCount = 0;
+        int complianceReportsCount = 0;
+        
+        for (Dispute dispute : activeDisputes) {
+            // Skip disputes that don't have an SLA deadline set
+            if (dispute.getSlaDeadline() == null) {
+                continue;
+            }
+            
+            long minutesUntilDeadline = ChronoUnit.MINUTES.between(now, dispute.getSlaDeadline());
+            
+            // Case 1: Approaching deadline - send reminders
+            if (minutesUntilDeadline > 0 && minutesUntilDeadline <= reminderThresholdMinutes && 
+                    dispute.getRemindersSent() < maxReminders) {
+                
+                boolean reminderSent = notificationService.sendSLAReminderNotification(dispute, (int) minutesUntilDeadline);
+                if (reminderSent) {
+                    remindersCount++;
+                    disputeRepository.save(dispute); // Save the updated reminder count
+                }
+            }
+            // Case 2: SLA violated but no compliance report needed yet
+            else if (minutesUntilDeadline < 0 && !dispute.isEscalated()) {
+                // Send SLA violation notification
+                notificationService.sendSLAViolationNotification(dispute);
+                
+                // Escalate the dispute
+                escalateDispute(dispute);
+                violationsCount++;
+            }
+            // Case 3: Severe SLA violation - generate compliance report
+            else if (minutesUntilDeadline < -complianceReportThresholdMinutes && 
+                    !dispute.isComplianceReportGenerated()) {
+                
+                boolean reportGenerated = notificationService.generateComplianceReport(dispute);
+                if (reportGenerated) {
+                    complianceReportsCount++;
+                    disputeRepository.save(dispute); // Save the updated compliance report flag
+                }
+            }
+        }
+        
+        log.info("SLA monitoring completed: {} reminders sent, {} violations processed, {} compliance reports generated",
+                remindersCount, violationsCount, complianceReportsCount);
     }
     
     private CaseOfficer.OfficerLevel determineRequiredOfficerLevel(Dispute dispute) {

@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +54,9 @@ public class DisputeService {
         dispute.setSubmittedUserPhoneNumber(submission.getUserPhoneNumber());
         dispute.setSubmittedUserEmailAddress(submission.getUserEmailAddress());
         dispute.setDescription(submission.getDescription());
+        
+        // Set SLA deadline (5 minutes for testing)
+        dispute.setSlaDeadline(LocalDateTime.now().plusMinutes(5));
         
         // Set initial PII validation status
         dispute.setPiiValidationStatus(Dispute.PIIValidationStatus.PENDING);

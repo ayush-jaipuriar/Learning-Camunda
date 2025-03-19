@@ -1,0 +1,152 @@
+{
+	"info": {
+		"_postman_id": "f3a5e6d7-8b9c-4d0e-a1f2-3b4c5d6e7f8g",
+		"name": "SLA Testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12345678"
+	},
+	"item": [
+		{
+			"name": "1. Submit Dispute",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userId\": \"john_user1\",\n    \"disputeType\": \"incorrect_info\",\n    \"creditReportId\": \"CR-SLA-TEST\",\n    \"userFullName\": \"John Doe\",\n    \"userAddress\": \"123 Main St, Anytown, CA 92345\",\n    \"userPhoneNumber\": \"555-123-4567\",\n    \"userEmailAddress\": \"john_user1@example.com\",\n    \"description\": \"This is a test dispute for SLA testing.\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/disputes",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"disputes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Get Dispute Details",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/disputes/{{slaDisputeCaseId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"disputes",
+						"{{slaDisputeCaseId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Set SLA Deadline (1 minute from now)",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/test/set-sla-deadline/{{slaDisputeCaseId}}/1",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"test",
+						"set-sla-deadline",
+						"{{slaDisputeCaseId}}",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Trigger SLA Monitoring",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/test/monitor-sla",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"test",
+						"monitor-sla"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5. Simulate Timer Expiration",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/test/simulate-timer/{{slaDisputeCaseId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"test",
+						"simulate-timer",
+						"{{slaDisputeCaseId}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"if (pm.response.code === 200 && pm.info.requestName.includes(\"Submit Dispute\")) {",
+					"    var responseData = pm.response.json();",
+					"    pm.collectionVariables.set(\"slaDisputeCaseId\", responseData.caseId);",
+					"    console.log(\"Set SLA dispute case ID to: \" + responseData.caseId);",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "slaDisputeCaseId",
+			"value": ""
+		}
+	]
+} 

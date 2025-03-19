@@ -2,6 +2,7 @@ package com.example.disputeresolutionsystem.controller;
 
 import com.example.disputeresolutionsystem.model.CaseOfficer;
 import com.example.disputeresolutionsystem.model.Dispute;
+import com.example.disputeresolutionsystem.model.UserPII;
 import com.example.disputeresolutionsystem.repository.CaseOfficerRepository;
 import com.example.disputeresolutionsystem.repository.DisputeRepository;
 import com.example.disputeresolutionsystem.service.CamundaUserService;
@@ -191,6 +192,44 @@ public class TestController {
         response.put("message", escalated ? 
                 "Timer expiration simulated, dispute escalated" : 
                 "Failed to escalate dispute");
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/monitor-sla")
+    @jakarta.transaction.Transactional
+    public ResponseEntity<Map<String, String>> monitorSLA() {
+        // Trigger SLA monitoring manually
+        caseAssignmentService.monitorSLAViolations();
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "SLA monitoring triggered successfully");
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    @PostMapping("/set-sla-deadline/{caseId}/{minutesFromNow}")
+    @jakarta.transaction.Transactional
+    public ResponseEntity<Map<String, Object>> setSLADeadline(
+            @PathVariable String caseId,
+            @PathVariable int minutesFromNow) {
+        
+        // Find the dispute
+        Dispute dispute = disputeRepository.findById(caseId)
+                .orElseThrow(() -> new RuntimeException("Dispute not found with ID: " + caseId));
+        
+        // Set SLA deadline
+        LocalDateTime deadline = LocalDateTime.now().plusMinutes(minutesFromNow);
+        dispute.setSlaDeadline(deadline);
+        disputeRepository.save(dispute);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "SLA deadline set successfully");
+        response.put("caseId", caseId);
+        response.put("slaDeadline", deadline.toString());
+        response.put("minutesFromNow", minutesFromNow);
         
         return ResponseEntity.ok(response);
     }

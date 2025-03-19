@@ -23,4 +23,12 @@ public interface CaseAssignmentService {
      * @return true if escalation was successful, false otherwise
      */
     boolean escalateDispute(Dispute dispute);
+    
+    /**
+     * Checks for disputes approaching or exceeding their SLA deadlines and takes appropriate action
+     * - For approaching deadlines: sends reminders
+     * - For exceeded deadlines: escalates and sends violation notifications
+     * - For severely exceeded deadlines: generates compliance reports
+     */
+    void monitorSLAViolations();
 } 

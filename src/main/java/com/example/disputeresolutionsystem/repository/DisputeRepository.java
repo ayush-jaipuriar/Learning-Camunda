@@ -24,4 +24,9 @@ public interface DisputeRepository extends JpaRepository<Dispute, String> {
      * Find disputes by assigned officer
      */
     List<Dispute> findByAssignedOfficerId(Long officerId);
+    
+    /**
+     * Find disputes with a status not equal to the specified value
+     */
+    List<Dispute> findByStatusNot(String status);
 } 

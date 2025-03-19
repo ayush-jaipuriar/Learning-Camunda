@@ -189,10 +189,10 @@
       <bpmn:outgoing>Flow_0yvpi8r</bpmn:outgoing>
     </bpmn:userTask>
     
-    <bpmn:boundaryEvent id="Event_Timer" name="2 Minutes" attachedToRef="Activity_ReviewDispute">
+    <bpmn:boundaryEvent id="Event_Timer" name="5 Minutes" attachedToRef="Activity_ReviewDispute">
       <bpmn:outgoing>Flow_FromTimer</bpmn:outgoing>
       <bpmn:timerEventDefinition id="TimerEventDefinition_1">
-        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT5M</bpmn:timeDuration>
       </bpmn:timerEventDefinition>
     </bpmn:boundaryEvent>
     

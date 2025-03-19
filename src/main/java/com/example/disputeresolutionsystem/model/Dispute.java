@@ -50,6 +50,10 @@ public class Dispute {
     private LocalDateTime assignmentTimestamp;
     private LocalDateTime escalationTimestamp;
     private LocalDateTime resolutionTimestamp;
+    private LocalDateTime slaDeadline;
+    
+    private int remindersSent = 0;
+    private boolean complianceReportGenerated = false;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "officer_id")
@@ -99,6 +103,10 @@ public class Dispute {
         }
         if (piiValidationStatus == null) {
             piiValidationStatus = PIIValidationStatus.PENDING;
+        }
+        if (slaDeadline == null) {
+            // Set default SLA deadline to 5 minutes after submission
+            slaDeadline = LocalDateTime.now().plusMinutes(5);
         }
         // Initialize escalated field to false by default
         // This is just for new entities, existing ones will be handled by the SQL migration
