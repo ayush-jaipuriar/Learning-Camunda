@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_MultiLevelApproval"
+                  targetNamespace="http://bpmn.io/schema/bpmn"
+                  exporter="Camunda Modeler"
+                  exporterVersion="5.0.0">
+  <bpmn:process id="multi_level_approval_process" name="Multi-Level Approval Process" isExecutable="true" camunda:historyTimeToLive="30">
+    <bpmn:startEvent id="StartEvent_1" name="High Complexity Dispute Received">
+      <bpmn:outgoing>Flow_ToLevel1Assignment</bpmn:outgoing>
+    </bpmn:startEvent>
+    
+    <!-- Level 1 Approval Flow -->
+    <bpmn:sequenceFlow id="Flow_ToLevel1Assignment" sourceRef="StartEvent_1" targetRef="Activity_AssignLevel1" />
+    
+    <bpmn:serviceTask id="Activity_AssignLevel1" name="Assign Level 1 Approver" camunda:delegateExpression="${level1ApprovalDelegate}">
+      <bpmn:incoming>Flow_ToLevel1Assignment</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToLevel1Gateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_ToLevel1Gateway" sourceRef="Activity_AssignLevel1" targetRef="Gateway_Level1Assignment" />
+    
+    <bpmn:exclusiveGateway id="Gateway_Level1Assignment" name="Assignment Successful?">
+      <bpmn:incoming>Flow_ToLevel1Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Level1AssignmentSuccess</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Level1AssignmentFailed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_Level1AssignmentSuccess" name="Yes" sourceRef="Gateway_Level1Assignment" targetRef="Activity_Level1Review">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${level1AssignmentSuccessful == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_Level1AssignmentFailed" name="No" sourceRef="Gateway_Level1Assignment" targetRef="Activity_ManualAssignment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${level1AssignmentSuccessful == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:userTask id="Activity_ManualAssignment" name="Manual Approver Assignment" camunda:assignee="admin">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="caseId" label="Case ID" type="string" />
+          <camunda:formField id="userId" label="User ID" type="string" />
+          <camunda:formField id="level1ApproverUsername" label="Assign Level 1 Approver" type="string" />
+          <camunda:formField id="level2ApproverUsername" label="Assign Level 2 Approver" type="string" />
+          <camunda:formField id="level3ApproverUsername" label="Assign Level 3 Approver" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Level1AssignmentFailed</bpmn:incoming>
+      <bpmn:outgoing>Flow_FromManualAssignment</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <bpmn:sequenceFlow id="Flow_FromManualAssignment" sourceRef="Activity_ManualAssignment" targetRef="Activity_Level1Review" />
+    
+    <bpmn:userTask id="Activity_Level1Review" name="Level 1 Review" camunda:assignee="${level1ApproverUsername}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="caseId" label="Case ID" type="string" defaultValue="${caseId}">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserFullName" label="User Full Name" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserAddress" label="User Address" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserPhoneNumber" label="User Phone Number" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserEmailAddress" label="User Email Address" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="piiValidationStatus" label="PII Validation Status" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="disputeType" label="Dispute Type" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="description" label="Dispute Description" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="approvalDecision" label="Your Decision" type="enum">
+            <camunda:value id="APPROVED" name="Approve - Send to Level 2" />
+            <camunda:value id="REJECTED" name="Reject - Close Case" />
+            <camunda:value id="NEEDS_MORE_INFO" name="Need More Information" />
+          </camunda:formField>
+          <camunda:formField id="approvalNotes" label="Review Notes" type="string" />
+        </camunda:formData>
+        <camunda:taskListener event="create" delegateExpression="${approvalTaskCreateListener}" />
+        <camunda:taskListener event="complete" delegateExpression="${approvalTaskCompleteListener}" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Level1AssignmentSuccess</bpmn:incoming>
+      <bpmn:incoming>Flow_FromManualAssignment</bpmn:incoming>
+      <bpmn:outgoing>Flow_FromLevel1Review</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <bpmn:boundaryEvent id="Event_Level1Timer" name="10 Minutes" attachedToRef="Activity_Level1Review">
+      <bpmn:outgoing>Flow_FromLevel1Timer</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_Level1">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT10M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    
+    <bpmn:sequenceFlow id="Flow_FromLevel1Timer" sourceRef="Event_Level1Timer" targetRef="Activity_Level1Escalation" />
+    
+    <bpmn:serviceTask id="Activity_Level1Escalation" name="Escalate Level 1 Review" camunda:delegateExpression="${approvalEscalationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="approvalLevel">1</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_FromLevel1Timer</bpmn:incoming>
+      <bpmn:outgoing>Flow_FromLevel1Escalation</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_FromLevel1Escalation" sourceRef="Activity_Level1Escalation" targetRef="Activity_Level1Review" />
+    
+    <bpmn:sequenceFlow id="Flow_FromLevel1Review" sourceRef="Activity_Level1Review" targetRef="Gateway_Level1Decision" />
+    
+    <bpmn:exclusiveGateway id="Gateway_Level1Decision" name="Level 1 Decision">
+      <bpmn:incoming>Flow_FromLevel1Review</bpmn:incoming>
+      <bpmn:outgoing>Flow_Level1Approved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Level1Rejected</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Level1NeedsMoreInfo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_Level1Approved" name="Approved" sourceRef="Gateway_Level1Decision" targetRef="Activity_AssignLevel2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalDecision == 'APPROVED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_Level1Rejected" name="Rejected" sourceRef="Gateway_Level1Decision" targetRef="Activity_RejectCase">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalDecision == 'REJECTED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_Level1NeedsMoreInfo" name="Needs More Info" sourceRef="Gateway_Level1Decision" targetRef="Activity_RequestMoreInfo">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalDecision == 'NEEDS_MORE_INFO'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <!-- Level 2 Approval Flow -->
+    <bpmn:serviceTask id="Activity_AssignLevel2" name="Assign Level 2 Approver" camunda:delegateExpression="${level2ApprovalDelegate}">
+      <bpmn:incoming>Flow_Level1Approved</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToLevel2Gateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_ToLevel2Gateway" sourceRef="Activity_AssignLevel2" targetRef="Gateway_Level2Assignment" />
+    
+    <bpmn:exclusiveGateway id="Gateway_Level2Assignment" name="Assignment Successful?">
+      <bpmn:incoming>Flow_ToLevel2Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Level2AssignmentSuccess</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Level2AssignmentFailed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_Level2AssignmentSuccess" name="Yes" sourceRef="Gateway_Level2Assignment" targetRef="Activity_Level2Review">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${level2AssignmentSuccessful == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_Level2AssignmentFailed" name="No" sourceRef="Gateway_Level2Assignment" targetRef="Activity_ManualAssignment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${level2AssignmentSuccessful == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:userTask id="Activity_Level2Review" name="Level 2 Review (Senior Officer)" camunda:assignee="${level2ApproverUsername}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="caseId" label="Case ID" type="string" defaultValue="${caseId}">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserFullName" label="User Full Name" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserAddress" label="User Address" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserPhoneNumber" label="User Phone Number" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserEmailAddress" label="User Email Address" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="piiValidationStatus" label="PII Validation Status" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="disputeType" label="Dispute Type" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="description" label="Dispute Description" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="level1ApproverUsername" label="Level 1 Approver" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="level1ApprovalNotes" label="Level 1 Notes" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="approvalDecision" label="Your Decision" type="enum">
+            <camunda:value id="APPROVED" name="Approve - Send to Level 3" />
+            <camunda:value id="REJECTED" name="Reject - Close Case" />
+            <camunda:value id="NEEDS_MORE_INFO" name="Need More Information" />
+          </camunda:formField>
+          <camunda:formField id="approvalNotes" label="Review Notes" type="string" />
+        </camunda:formData>
+        <camunda:taskListener event="create" delegateExpression="${approvalTaskCreateListener}" />
+        <camunda:taskListener event="complete" delegateExpression="${approvalTaskCompleteListener}" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Level2AssignmentSuccess</bpmn:incoming>
+      <bpmn:outgoing>Flow_FromLevel2Review</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <bpmn:boundaryEvent id="Event_Level2Timer" name="15 Minutes" attachedToRef="Activity_Level2Review">
+      <bpmn:outgoing>Flow_FromLevel2Timer</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_Level2">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT15M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    
+    <bpmn:sequenceFlow id="Flow_FromLevel2Timer" sourceRef="Event_Level2Timer" targetRef="Activity_Level2Escalation" />
+    
+    <bpmn:serviceTask id="Activity_Level2Escalation" name="Escalate Level 2 Review" camunda:delegateExpression="${approvalEscalationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="approvalLevel">2</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_FromLevel2Timer</bpmn:incoming>
+      <bpmn:outgoing>Flow_FromLevel2Escalation</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_FromLevel2Escalation" sourceRef="Activity_Level2Escalation" targetRef="Activity_Level2Review" />
+    
+    <bpmn:sequenceFlow id="Flow_FromLevel2Review" sourceRef="Activity_Level2Review" targetRef="Gateway_Level2Decision" />
+    
+    <bpmn:exclusiveGateway id="Gateway_Level2Decision" name="Level 2 Decision">
+      <bpmn:incoming>Flow_FromLevel2Review</bpmn:incoming>
+      <bpmn:outgoing>Flow_Level2Approved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Level2Rejected</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Level2NeedsMoreInfo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_Level2Approved" name="Approved" sourceRef="Gateway_Level2Decision" targetRef="Activity_AssignLevel3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalDecision == 'APPROVED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_Level2Rejected" name="Rejected" sourceRef="Gateway_Level2Decision" targetRef="Activity_RejectCase">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalDecision == 'REJECTED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_Level2NeedsMoreInfo" name="Needs More Info" sourceRef="Gateway_Level2Decision" targetRef="Activity_RequestMoreInfo">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalDecision == 'NEEDS_MORE_INFO'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <!-- Level 3 Approval Flow -->
+    <bpmn:serviceTask id="Activity_AssignLevel3" name="Assign Level 3 Approver" camunda:delegateExpression="${level3ApprovalDelegate}">
+      <bpmn:incoming>Flow_Level2Approved</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToLevel3Gateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_ToLevel3Gateway" sourceRef="Activity_AssignLevel3" targetRef="Gateway_Level3Assignment" />
+    
+    <bpmn:exclusiveGateway id="Gateway_Level3Assignment" name="Assignment Successful?">
+      <bpmn:incoming>Flow_ToLevel3Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Level3AssignmentSuccess</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Level3AssignmentFailed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_Level3AssignmentSuccess" name="Yes" sourceRef="Gateway_Level3Assignment" targetRef="Activity_Level3Review">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${level3AssignmentSuccessful == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_Level3AssignmentFailed" name="No" sourceRef="Gateway_Level3Assignment" targetRef="Activity_ManualAssignment">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${level3AssignmentSuccessful == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:userTask id="Activity_Level3Review" name="Level 3 Review (Compliance Team)" camunda:assignee="${level3ApproverUsername}">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="caseId" label="Case ID" type="string" defaultValue="${caseId}">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserFullName" label="User Full Name" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserAddress" label="User Address" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserPhoneNumber" label="User Phone Number" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="submittedUserEmailAddress" label="User Email Address" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="piiValidationStatus" label="PII Validation Status" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="disputeType" label="Dispute Type" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="description" label="Dispute Description" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="level1ApproverUsername" label="Level 1 Approver" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="level1ApprovalNotes" label="Level 1 Notes" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="level2ApproverUsername" label="Level 2 Approver" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="level2ApprovalNotes" label="Level 2 Notes" type="string">
+            <camunda:properties>
+              <camunda:property id="readonly" value="true" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="approvalDecision" label="Your Decision" type="enum">
+            <camunda:value id="APPROVED" name="Final Approval - Close Case" />
+            <camunda:value id="REJECTED" name="Reject - Close Case" />
+            <camunda:value id="NEEDS_MORE_INFO" name="Need More Information" />
+          </camunda:formField>
+          <camunda:formField id="approvalNotes" label="Review Notes" type="string" />
+        </camunda:formData>
+        <camunda:taskListener event="create" delegateExpression="${approvalTaskCreateListener}" />
+        <camunda:taskListener event="complete" delegateExpression="${approvalTaskCompleteListener}" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Level3AssignmentSuccess</bpmn:incoming>
+      <bpmn:outgoing>Flow_FromLevel3Review</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <bpmn:boundaryEvent id="Event_Level3Timer" name="20 Minutes" attachedToRef="Activity_Level3Review">
+      <bpmn:outgoing>Flow_FromLevel3Timer</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDefinition_Level3">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT20M</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    
+    <bpmn:sequenceFlow id="Flow_FromLevel3Timer" sourceRef="Event_Level3Timer" targetRef="Activity_Level3Escalation" />
+    
+    <bpmn:serviceTask id="Activity_Level3Escalation" name="Escalate Level 3 Review" camunda:delegateExpression="${approvalEscalationDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="approvalLevel">3</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_FromLevel3Timer</bpmn:incoming>
+      <bpmn:outgoing>Flow_FromLevel3Escalation</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_FromLevel3Escalation" sourceRef="Activity_Level3Escalation" targetRef="Activity_Level3Review" />
+    
+    <bpmn:sequenceFlow id="Flow_FromLevel3Review" sourceRef="Activity_Level3Review" targetRef="Gateway_Level3Decision" />
+    
+    <bpmn:exclusiveGateway id="Gateway_Level3Decision" name="Level 3 Decision">
+      <bpmn:incoming>Flow_FromLevel3Review</bpmn:incoming>
+      <bpmn:outgoing>Flow_Level3Approved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Level3Rejected</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Level3NeedsMoreInfo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_Level3Approved" name="Approved" sourceRef="Gateway_Level3Decision" targetRef="Activity_FinalizeApproval">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalDecision == 'APPROVED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_Level3Rejected" name="Rejected" sourceRef="Gateway_Level3Decision" targetRef="Activity_RejectCase">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalDecision == 'REJECTED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_Level3NeedsMoreInfo" name="Needs More Info" sourceRef="Gateway_Level3Decision" targetRef="Activity_RequestMoreInfo">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approvalDecision == 'NEEDS_MORE_INFO'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <!-- Common Endpoints -->
+    <bpmn:serviceTask id="Activity_FinalizeApproval" name="Finalize Approval" camunda:expression="${true}">
+      <bpmn:incoming>Flow_Level3Approved</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToEndApproved</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_ToEndApproved" sourceRef="Activity_FinalizeApproval" targetRef="EndEvent_Approved" />
+    
+    <bpmn:endEvent id="EndEvent_Approved" name="Dispute Approved">
+      <bpmn:incoming>Flow_ToEndApproved</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:serviceTask id="Activity_RejectCase" name="Reject Dispute" camunda:expression="${true}">
+      <bpmn:incoming>Flow_Level1Rejected</bpmn:incoming>
+      <bpmn:incoming>Flow_Level2Rejected</bpmn:incoming>
+      <bpmn:incoming>Flow_Level3Rejected</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToEndRejected</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_ToEndRejected" sourceRef="Activity_RejectCase" targetRef="EndEvent_Rejected" />
+    
+    <bpmn:endEvent id="EndEvent_Rejected" name="Dispute Rejected">
+      <bpmn:incoming>Flow_ToEndRejected</bpmn:incoming>
+    </bpmn:endEvent>
+    
+    <bpmn:serviceTask id="Activity_RequestMoreInfo" name="Request More Information" camunda:expression="${true}">
+      <bpmn:incoming>Flow_Level1NeedsMoreInfo</bpmn:incoming>
+      <bpmn:incoming>Flow_Level2NeedsMoreInfo</bpmn:incoming>
+      <bpmn:incoming>Flow_Level3NeedsMoreInfo</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToEndMoreInfo</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_ToEndMoreInfo" sourceRef="Activity_RequestMoreInfo" targetRef="EndEvent_NeedsMoreInfo" />
+    
+    <bpmn:endEvent id="EndEvent_NeedsMoreInfo" name="More Information Requested">
+      <bpmn:incoming>Flow_ToEndMoreInfo</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+</bpmn:definitions> 

@@ -69,6 +69,42 @@ public class Dispute {
     @OneToMany(mappedBy = "dispute", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Document> documents = new ArrayList<>();
     
+    // Multi-level approval process fields
+    @Enumerated(EnumType.STRING)
+    private ApprovalStatus level1ApprovalStatus = ApprovalStatus.PENDING;
+    
+    @Enumerated(EnumType.STRING)
+    private ApprovalStatus level2ApprovalStatus = ApprovalStatus.PENDING;
+    
+    @Enumerated(EnumType.STRING)
+    private ApprovalStatus level3ApprovalStatus = ApprovalStatus.PENDING;
+    
+    @Column(length = 100)
+    private String level1ApproverUsername;
+    
+    @Column(length = 100)
+    private String level2ApproverUsername;
+    
+    @Column(length = 100)
+    private String level3ApproverUsername;
+    
+    @Column(length = 1000)
+    private String level1ApprovalNotes;
+    
+    @Column(length = 1000)
+    private String level2ApprovalNotes;
+    
+    @Column(length = 1000)
+    private String level3ApprovalNotes;
+    
+    private LocalDateTime level1ApprovalTimestamp;
+    private LocalDateTime level2ApprovalTimestamp;
+    private LocalDateTime level3ApprovalTimestamp;
+    
+    private boolean level1Escalated = false;
+    private boolean level2Escalated = false;
+    private boolean level3Escalated = false;
+    
     public enum PriorityLevel {
         LOW,
         MEDIUM,
@@ -90,6 +126,13 @@ public class Dispute {
         NOT_FOUND     // No matching user found in the system
     }
     
+    public enum ApprovalStatus {
+        PENDING,
+        APPROVED,
+        REJECTED,
+        NEEDS_MORE_INFO
+    }
+    
     @PrePersist
     public void prePersist() {
         if (status == null) {
@@ -108,7 +151,15 @@ public class Dispute {
             // Set default SLA deadline to 5 minutes after submission
             slaDeadline = LocalDateTime.now().plusMinutes(5);
         }
-        // Initialize escalated field to false by default
-        // This is just for new entities, existing ones will be handled by the SQL migration
+        // Initialize approval statuses
+        if (level1ApprovalStatus == null) {
+            level1ApprovalStatus = ApprovalStatus.PENDING;
+        }
+        if (level2ApprovalStatus == null) {
+            level2ApprovalStatus = ApprovalStatus.PENDING;
+        }
+        if (level3ApprovalStatus == null) {
+            level3ApprovalStatus = ApprovalStatus.PENDING;
+        }
     }
 } 

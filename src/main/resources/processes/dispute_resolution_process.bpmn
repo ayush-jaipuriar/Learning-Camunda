@@ -186,7 +186,7 @@
       <bpmn:incoming>Flow_AssignmentSuccess</bpmn:incoming>
       <bpmn:incoming>Flow_EscalationSuccess</bpmn:incoming>
       <bpmn:incoming>Flow_FromManualAssignment</bpmn:incoming>
-      <bpmn:outgoing>Flow_0yvpi8r</bpmn:outgoing>
+      <bpmn:outgoing>Flow_FromReviewDispute</bpmn:outgoing>
     </bpmn:userTask>
     
     <bpmn:boundaryEvent id="Event_Timer" name="5 Minutes" attachedToRef="Activity_ReviewDispute">
@@ -198,11 +198,43 @@
     
     <bpmn:sequenceFlow id="Flow_FromTimer" sourceRef="Event_Timer" targetRef="Activity_EscalateCase" />
     
-    <bpmn:endEvent id="Event_0z47pf5" name="Dispute Processed">
-      <bpmn:incoming>Flow_0yvpi8r</bpmn:incoming>
-    </bpmn:endEvent>
+    <bpmn:serviceTask id="Activity_CheckComplexity" name="Check Dispute Complexity" camunda:delegateExpression="${complexityCheckDelegate}">
+      <bpmn:incoming>Flow_FromReviewDispute</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToComplexityGateway</bpmn:outgoing>
+    </bpmn:serviceTask>
     
-    <bpmn:sequenceFlow id="Flow_0yvpi8r" sourceRef="Activity_ReviewDispute" targetRef="Event_0z47pf5" />
+    <bpmn:sequenceFlow id="Flow_FromReviewDispute" sourceRef="Activity_ReviewDispute" targetRef="Activity_CheckComplexity" />
+    
+    <bpmn:exclusiveGateway id="Gateway_ComplexityCheck" name="High Complexity?">
+      <bpmn:incoming>Flow_ToComplexityGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_ComplexityHigh</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ComplexityRegular</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_ToComplexityGateway" sourceRef="Activity_CheckComplexity" targetRef="Gateway_ComplexityCheck" />
+    
+    <bpmn:sequenceFlow id="Flow_ComplexityHigh" name="Yes" sourceRef="Gateway_ComplexityCheck" targetRef="Activity_StartMultiLevelApproval">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requiresMultiLevelApproval == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_ComplexityRegular" name="No" sourceRef="Gateway_ComplexityCheck" targetRef="Event_DisputeProcessed">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requiresMultiLevelApproval == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:callActivity id="Activity_StartMultiLevelApproval" name="Multi-Level Approval Process" calledElement="multi_level_approval_process">
+      <bpmn:extensionElements>
+        <camunda:in variables="all" />
+        <camunda:out variables="all" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ComplexityHigh</bpmn:incoming>
+      <bpmn:outgoing>Flow_FromMultiLevelApproval</bpmn:outgoing>
+    </bpmn:callActivity>
+    
+    <bpmn:sequenceFlow id="Flow_FromMultiLevelApproval" sourceRef="Activity_StartMultiLevelApproval" targetRef="Event_DisputeProcessed" />
+    
+    <bpmn:endEvent id="Event_0z47pf5" name="Dispute Processed">
+      <bpmn:incoming>Flow_FromMultiLevelApproval</bpmn:incoming>
+    </bpmn:endEvent>
   </bpmn:process>
   
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
@@ -261,9 +293,9 @@
         <di:waypoint x="560" y="175" />
         <di:waypoint x="560" y="190" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0yvpi8r_di" bpmnElement="Flow_0yvpi8r">
-        <di:waypoint x="750" y="117" />
-        <di:waypoint x="812" y="117" />
+      <bpmndi:BPMNEdge id="Flow_FromReviewDispute_di" bpmnElement="Flow_FromReviewDispute">
+        <di:waypoint x="650" y="77" />
+        <di:waypoint x="750" y="77" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />

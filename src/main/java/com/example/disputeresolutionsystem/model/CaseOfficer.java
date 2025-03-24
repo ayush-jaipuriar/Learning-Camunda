@@ -2,8 +2,8 @@ package com.example.disputeresolutionsystem.model;
 
 import lombok.Data;
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Entity
@@ -14,26 +14,55 @@ public class CaseOfficer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @Column(unique = true)
     private String username;
+    
     private String fullName;
     private String email;
     
-    @Enumerated(EnumType.STRING)
-    private OfficerLevel level;
+    // New field for officer role
+    @Column(length = 50)
+    private String role = "OFFICER"; // Default role
     
-    private int currentWorkload;
-    private int maxWorkload;
+    // Flag to indicate if the officer is available for new assignments
+    private boolean available = true;
+    
+    // Number of currently assigned cases
+    private int caseLoad = 0;
+    
+    // Maximum number of cases an officer can handle
+    private int maxCaseLoad = 10;
     
     @OneToMany(mappedBy = "assignedOfficer")
-    private List<Dispute> assignedDisputes = new ArrayList<>();
+    private Set<Dispute> assignedDisputes = new HashSet<>();
     
-    public enum OfficerLevel {
-        LEVEL_1,
-        SENIOR,
-        SUPERVISOR
+    /**
+     * Check if the officer can accept more cases
+     * @return true if the officer can accept more cases
+     */
+    public boolean canAcceptMoreCases() {
+        return available && caseLoad < maxCaseLoad;
     }
     
-    public boolean canHandleMoreCases() {
-        return currentWorkload < maxWorkload;
+    /**
+     * Increment the case load when a new case is assigned
+     */
+    public void incrementCaseLoad() {
+        this.caseLoad++;
+        if (this.caseLoad >= this.maxCaseLoad) {
+            this.available = false;
+        }
+    }
+    
+    /**
+     * Decrement the case load when a case is resolved
+     */
+    public void decrementCaseLoad() {
+        if (this.caseLoad > 0) {
+            this.caseLoad--;
+        }
+        if (this.caseLoad < this.maxCaseLoad) {
+            this.available = true;
+        }
     }
 } 
