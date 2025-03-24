@@ -11,6 +11,7 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -133,5 +134,146 @@ public class AuditAspect {
                 null
             );
         }
+    }
+
+    @AfterReturning(
+        pointcut = "execution(* com.example.disputeresolutionsystem.repository.DisputeRepository.save(..))",
+        returning = "result"
+    )
+    public void logDisputeChanges(JoinPoint joinPoint, Object result) {
+        if (!(result instanceof Dispute)) {
+            return;
+        }
+        
+        Dispute dispute = (Dispute) result;
+        
+        // Log dispute creation or update
+        log.debug("Logging dispute creation: {}", dispute.getCaseId());
+        
+        Map<String, Object> actionData = new HashMap<>();
+        actionData.put("timestamp", LocalDateTime.now());
+        actionData.put("caseId", dispute.getCaseId());
+        actionData.put("userId", dispute.getUserId());
+        actionData.put("actionType", "DISPUTE_UPDATE");
+        actionData.put("newStatus", dispute.getStatus());
+        
+        logAuditEvent(actionData);
+    }
+    
+    @AfterReturning(
+        pointcut = "execution(* com.example.disputeresolutionsystem.service.DisputeService.assignDispute(..))",
+        returning = "result"
+    )
+    public void logDisputeAssignmentService(JoinPoint joinPoint, Object result) {
+        if (result == null) return;
+        
+        Map<String, Object> actionData = new HashMap<>();
+        Dispute dispute = (Dispute) result;
+        
+        actionData.put("caseId", dispute.getCaseId());
+        
+        // Include officer information if available
+        if (dispute.getAssignedOfficer() != null) {
+            actionData.put("officerId", dispute.getAssignedOfficer().getId());
+            actionData.put("officerUsername", dispute.getAssignedOfficer().getUsername());
+        }
+        
+        actionData.put("timestamp", LocalDateTime.now().toString());
+        actionData.put("action", "CASE_ASSIGNMENT");
+        
+        logAuditEvent(actionData);
+    }
+    
+    @AfterReturning(
+        pointcut = "execution(* com.example.disputeresolutionsystem.service.DisputeService.validatePII(..))",
+        returning = "result"
+    )
+    public void logPIIValidation(JoinPoint joinPoint, Object result) {
+        if (!(result instanceof Dispute)) {
+            return;
+        }
+        
+        Dispute dispute = (Dispute) result;
+        
+        Map<String, Object> actionData = new HashMap<>();
+        actionData.put("timestamp", LocalDateTime.now());
+        actionData.put("caseId", dispute.getCaseId());
+        actionData.put("actionType", "PII_VALIDATION");
+        actionData.put("status", dispute.getStatus());
+        actionData.put("validationResult", dispute.getPiiValidationStatus());
+        
+        logAuditEvent(actionData);
+    }
+    
+    @AfterReturning(
+        pointcut = "execution(* com.example.disputeresolutionsystem.service.MultiLevelApprovalService.recordLevel1Decision(..))",
+        returning = "result"
+    )
+    public void logLevel1Decision(JoinPoint joinPoint, Object result) {
+        if (!(result instanceof Dispute)) {
+            return;
+        }
+        
+        Dispute dispute = (Dispute) result;
+        
+        Map<String, Object> actionData = new HashMap<>();
+        actionData.put("timestamp", LocalDateTime.now());
+        actionData.put("caseId", dispute.getCaseId());
+        actionData.put("actionType", "LEVEL1_DECISION");
+        actionData.put("status", dispute.getStatus());
+        actionData.put("level1Status", dispute.getLevel1ApprovalStatus());
+        actionData.put("level1Approver", dispute.getLevel1ApproverUsername());
+        
+        logAuditEvent(actionData);
+    }
+    
+    @AfterReturning(
+        pointcut = "execution(* com.example.disputeresolutionsystem.service.MultiLevelApprovalService.recordLevel2Decision(..))",
+        returning = "result"
+    )
+    public void logLevel2Decision(JoinPoint joinPoint, Object result) {
+        if (!(result instanceof Dispute)) {
+            return;
+        }
+        
+        Dispute dispute = (Dispute) result;
+        
+        Map<String, Object> actionData = new HashMap<>();
+        actionData.put("timestamp", LocalDateTime.now());
+        actionData.put("caseId", dispute.getCaseId());
+        actionData.put("actionType", "LEVEL2_DECISION");
+        actionData.put("status", dispute.getStatus());
+        actionData.put("level2Status", dispute.getLevel2ApprovalStatus());
+        actionData.put("level2Approver", dispute.getLevel2ApproverUsername());
+        
+        logAuditEvent(actionData);
+    }
+    
+    @AfterReturning(
+        pointcut = "execution(* com.example.disputeresolutionsystem.service.MultiLevelApprovalService.recordLevel3Decision(..))",
+        returning = "result"
+    )
+    public void logLevel3Decision(JoinPoint joinPoint, Object result) {
+        if (!(result instanceof Dispute)) {
+            return;
+        }
+        
+        Dispute dispute = (Dispute) result;
+        
+        Map<String, Object> actionData = new HashMap<>();
+        actionData.put("timestamp", LocalDateTime.now());
+        actionData.put("caseId", dispute.getCaseId());
+        actionData.put("actionType", "LEVEL3_DECISION");
+        actionData.put("status", dispute.getStatus());
+        actionData.put("level3Status", dispute.getLevel3ApprovalStatus());
+        actionData.put("level3Approver", dispute.getLevel3ApproverUsername());
+        
+        logAuditEvent(actionData);
+    }
+    
+    private void logAuditEvent(Map<String, Object> actionData) {
+        // In a real application, this would write to a database or dedicated audit log
+        // For now, just log it
+        log.info("AUDIT: {}", actionData);
     }
 } 

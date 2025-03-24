@@ -1,6 +1,7 @@
 package com.example.disputeresolutionsystem.delegate;
 
 import com.example.disputeresolutionsystem.model.Dispute.ApprovalStatus;
+import com.example.disputeresolutionsystem.model.Dispute;
 import com.example.disputeresolutionsystem.service.MultiLevelApprovalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +21,8 @@ public class ApprovalTaskCompleteListener implements TaskListener {
 
     @Override
     public void notify(DelegateTask delegateTask) {
-        String caseId = (String) delegateTask.getVariable("caseId");
         String taskDefinitionKey = delegateTask.getTaskDefinitionKey();
+        String caseId = (String) delegateTask.getVariable("caseId");
         String approvalDecision = (String) delegateTask.getVariable("approvalDecision");
         String notes = (String) delegateTask.getVariable("approvalNotes");
         String username = delegateTask.getAssignee();
@@ -34,21 +35,25 @@ public class ApprovalTaskCompleteListener implements TaskListener {
         ApprovalStatus decision = ApprovalStatus.valueOf(approvalDecision);
         log.info("Processing {} decision for task: {}, case: {}", decision, taskDefinitionKey, caseId);
         
+        Dispute dispute = null;
         boolean success = false;
         
         switch (taskDefinitionKey) {
             case "task_level1_approval":
-                success = approvalService.recordLevel1Decision(caseId, decision, notes, username);
+                dispute = approvalService.recordLevel1Decision(caseId, decision, notes, username);
+                success = dispute != null;
                 delegateTask.setVariable("level1Approved", decision == ApprovalStatus.APPROVED);
                 break;
                 
             case "task_level2_approval":
-                success = approvalService.recordLevel2Decision(caseId, decision, notes, username);
+                dispute = approvalService.recordLevel2Decision(caseId, decision, notes, username);
+                success = dispute != null;
                 delegateTask.setVariable("level2Approved", decision == ApprovalStatus.APPROVED);
                 break;
                 
             case "task_level3_approval":
-                success = approvalService.recordLevel3Decision(caseId, decision, notes, username);
+                dispute = approvalService.recordLevel3Decision(caseId, decision, notes, username);
+                success = dispute != null;
                 delegateTask.setVariable("level3Approved", decision == ApprovalStatus.APPROVED);
                 break;
                 

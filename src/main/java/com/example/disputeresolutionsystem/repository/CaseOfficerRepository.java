@@ -16,6 +16,8 @@ public interface CaseOfficerRepository extends JpaRepository<CaseOfficer, Long> 
     
     List<CaseOfficer> findByRole(String role);
     
+    List<CaseOfficer> findByRoleAndAvailableTrue(String role);
+    
     @Query("SELECT c FROM CaseOfficer c WHERE c.role = :role AND c.available = :available AND c.caseLoad < c.maxCaseLoad")
     List<CaseOfficer> findByRoleAndAvailableAndCaseLoadLessThanMaxCaseLoad(
             @Param("role") String role, 

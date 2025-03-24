@@ -3,34 +3,38 @@ package com.example.disputeresolutionsystem.service.impl;
 import com.example.disputeresolutionsystem.model.CaseOfficer;
 import com.example.disputeresolutionsystem.model.Dispute;
 import com.example.disputeresolutionsystem.service.NotificationService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
-
+    
+    private static final Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
+    
+    @Value("${app.notifications.enabled:true}")
+    private boolean notificationsEnabled;
+    
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     
     @Override
     public boolean sendSLAReminderNotification(Dispute dispute, int minutesRemaining) {
         CaseOfficer assignedOfficer = dispute.getAssignedOfficer();
         if (assignedOfficer == null) {
-            log.warn("Cannot send SLA reminder for dispute {} - no assigned officer", dispute.getCaseId());
+            logger.warn("Cannot send SLA reminder for dispute {} - no assigned officer", dispute.getCaseId());
             return false;
         }
         
         // In a real implementation, this would send an email or other notification
         // For now, we'll just log it
-        log.info("REMINDER: SLA deadline approaching for dispute {}", dispute.getCaseId());
-        log.info("  - Assigned to: {} ({})", assignedOfficer.getUsername(), assignedOfficer.getEmail());
-        log.info("  - Time remaining: {} minutes", minutesRemaining);
-        log.info("  - SLA Deadline: {}", DATE_FORMATTER.format(dispute.getSlaDeadline()));
+        logger.info("REMINDER: SLA deadline approaching for dispute {}", dispute.getCaseId());
+        logger.info("  - Assigned to: {} ({})", assignedOfficer.getUsername(), assignedOfficer.getEmail());
+        logger.info("  - Time remaining: {} minutes", minutesRemaining);
+        logger.info("  - SLA Deadline: {}", DATE_FORMATTER.format(dispute.getSlaDeadline()));
         
         // Update reminder count in the dispute
         dispute.setRemindersSent(dispute.getRemindersSent() + 1);
@@ -41,16 +45,16 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public boolean sendEscalationNotification(Dispute dispute, CaseOfficer supervisor) {
         if (supervisor == null) {
-            log.warn("Cannot send escalation notification - no supervisor provided for dispute {}", dispute.getCaseId());
+            logger.warn("Cannot send escalation notification - no supervisor provided for dispute {}", dispute.getCaseId());
             return false;
         }
         
         // In a real implementation, this would send an email or other notification
         // For now, we'll just log it
-        log.info("ESCALATION: Dispute {} has been escalated", dispute.getCaseId());
-        log.info("  - Escalated to: {} ({})", supervisor.getUsername(), supervisor.getEmail());
-        log.info("  - Original SLA Deadline: {}", DATE_FORMATTER.format(dispute.getSlaDeadline()));
-        log.info("  - Escalation Time: {}", DATE_FORMATTER.format(LocalDateTime.now()));
+        logger.info("ESCALATION: Dispute {} has been escalated", dispute.getCaseId());
+        logger.info("  - Escalated to: {} ({})", supervisor.getUsername(), supervisor.getEmail());
+        logger.info("  - Original SLA Deadline: {}", DATE_FORMATTER.format(dispute.getSlaDeadline()));
+        logger.info("  - Escalation Time: {}", DATE_FORMATTER.format(LocalDateTime.now()));
         
         return true;
     }
@@ -59,16 +63,16 @@ public class NotificationServiceImpl implements NotificationService {
     public boolean sendSLAViolationNotification(Dispute dispute) {
         // In a real implementation, this would send an email or other notification
         // For now, we'll just log it
-        log.info("SLA VIOLATION: Dispute {} has breached SLA", dispute.getCaseId());
-        log.info("  - SLA Deadline: {}", DATE_FORMATTER.format(dispute.getSlaDeadline()));
-        log.info("  - Current Time: {}", DATE_FORMATTER.format(LocalDateTime.now()));
+        logger.info("SLA VIOLATION: Dispute {} has breached SLA", dispute.getCaseId());
+        logger.info("  - SLA Deadline: {}", DATE_FORMATTER.format(dispute.getSlaDeadline()));
+        logger.info("  - Current Time: {}", DATE_FORMATTER.format(LocalDateTime.now()));
         
         if (dispute.getAssignedOfficer() != null) {
-            log.info("  - Assigned to: {} ({})", 
+            logger.info("  - Assigned to: {} ({})", 
                     dispute.getAssignedOfficer().getUsername(), 
                     dispute.getAssignedOfficer().getEmail());
         } else {
-            log.info("  - Not assigned to any officer");
+            logger.info("  - Not assigned to any officer");
         }
         
         return true;
@@ -78,15 +82,15 @@ public class NotificationServiceImpl implements NotificationService {
     public boolean generateComplianceReport(Dispute dispute) {
         // In a real implementation, this would generate a report and potentially send it
         // For now, we'll just log it
-        log.info("COMPLIANCE REPORT GENERATED: For severely delayed dispute {}", dispute.getCaseId());
-        log.info("  - SLA Deadline: {}", DATE_FORMATTER.format(dispute.getSlaDeadline()));
-        log.info("  - Current Delay: {} minutes", 
+        logger.info("COMPLIANCE REPORT GENERATED: For severely delayed dispute {}", dispute.getCaseId());
+        logger.info("  - SLA Deadline: {}", DATE_FORMATTER.format(dispute.getSlaDeadline()));
+        logger.info("  - Current Delay: {} minutes", 
                 java.time.Duration.between(dispute.getSlaDeadline(), LocalDateTime.now()).toMinutes());
-        log.info("  - Status: {}", dispute.getStatus());
-        log.info("  - Reminders Sent: {}", dispute.getRemindersSent());
+        logger.info("  - Status: {}", dispute.getStatus());
+        logger.info("  - Reminders Sent: {}", dispute.getRemindersSent());
         
         if (dispute.getAssignedOfficer() != null) {
-            log.info("  - Assigned to: {} ({})", 
+            logger.info("  - Assigned to: {} ({})", 
                     dispute.getAssignedOfficer().getUsername(), 
                     dispute.getAssignedOfficer().getEmail());
         }
@@ -95,5 +99,87 @@ public class NotificationServiceImpl implements NotificationService {
         dispute.setComplianceReportGenerated(true);
         
         return true;
+    }
+
+    @Override
+    public void sendAssignmentNotification(Dispute dispute, CaseOfficer officer) {
+        if (!notificationsEnabled) {
+            logger.info("Notifications disabled. Would have sent assignment notification for dispute {} to {}", 
+                dispute.getCaseId(), officer.getUsername());
+            return;
+        }
+        
+        // In a real system, this would send an email, SMS, or other notification
+        logger.info("Sending assignment notification for dispute {} to {}", 
+            dispute.getCaseId(), officer.getUsername());
+        
+        // Simulate sending notification
+        String message = String.format(
+            "Hello %s, a new dispute (ID: %s) has been assigned to you. Please review it as soon as possible.",
+            officer.getFullName(), dispute.getCaseId());
+        
+        // Log the notification for demo purposes
+        logger.info("Assignment notification sent: {}", message);
+    }
+    
+    @Override
+    public void sendReminderNotification(Dispute dispute) {
+        if (!notificationsEnabled) {
+            logger.info("Notifications disabled. Would have sent reminder for dispute {}", 
+                dispute.getCaseId());
+            return;
+        }
+        
+        CaseOfficer officer = dispute.getAssignedOfficer();
+        if (officer == null) {
+            logger.warn("Cannot send reminder for dispute {} - no assigned officer", dispute.getCaseId());
+            return;
+        }
+        
+        // In a real system, this would send an email, SMS, or other notification
+        logger.info("Sending reminder notification for dispute {} to {}", 
+            dispute.getCaseId(), officer.getUsername());
+        
+        // Simulate sending notification
+        String message = String.format(
+            "REMINDER: Dispute ID %s is approaching its SLA deadline. Please complete your review as soon as possible.",
+            dispute.getCaseId());
+        
+        // Log the notification for demo purposes
+        logger.info("Reminder notification sent to {}: {}", officer.getUsername(), message);
+    }
+    
+    @Override
+    public void sendEscalationNotification(String recipientId, String subject, String message) {
+        if (!notificationsEnabled) {
+            logger.info("Notifications disabled. Would have sent escalation to {}: {}", recipientId, subject);
+            return;
+        }
+        
+        logger.info("Sending escalation notification to {} - Subject: {}", recipientId, subject);
+        
+        // Log the notification for demo purposes
+        logger.info("Escalation notification sent to {}: {} - {}", recipientId, subject, message);
+    }
+    
+    @Override
+    public void sendDisputeCompletionNotification(Dispute dispute) {
+        if (!notificationsEnabled) {
+            logger.info("Notifications disabled. Would have sent completion notification for dispute {}", 
+                dispute.getCaseId());
+            return;
+        }
+        
+        // In a real system, this would send an email, SMS, or other notification
+        logger.info("Sending dispute completion notification for dispute {}", dispute.getCaseId());
+        
+        // Simulate sending notification
+        String message = String.format(
+            "Your dispute (ID: %s) has been processed. Final status: %s",
+            dispute.getCaseId(), dispute.getStatus());
+        
+        // Log the notification for demo purposes
+        logger.info("Dispute completion notification prepared for user {}: {}", 
+            dispute.getUserId(), message);
     }
 } 

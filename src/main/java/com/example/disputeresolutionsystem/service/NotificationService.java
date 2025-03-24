@@ -2,18 +2,8 @@ package com.example.disputeresolutionsystem.service;
 
 import com.example.disputeresolutionsystem.model.CaseOfficer;
 import com.example.disputeresolutionsystem.model.Dispute;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
-@Service
-public class NotificationService {
-    
-    private static final Logger logger = LoggerFactory.getLogger(NotificationService.class);
-    
-    @Value("${app.notifications.enabled:true}")
-    private boolean notificationsEnabled;
+public interface NotificationService {
     
     /**
      * Send a notification about a new dispute being assigned to a case officer
@@ -21,56 +11,14 @@ public class NotificationService {
      * @param dispute The dispute that was assigned
      * @param officer The officer to whom the dispute was assigned
      */
-    public void sendAssignmentNotification(Dispute dispute, CaseOfficer officer) {
-        if (!notificationsEnabled) {
-            logger.info("Notifications disabled. Would have sent assignment notification for dispute {} to {}", 
-                dispute.getCaseId(), officer.getUsername());
-            return;
-        }
-        
-        // In a real system, this would send an email, SMS, or other notification
-        logger.info("Sending assignment notification for dispute {} to {}", 
-            dispute.getCaseId(), officer.getUsername());
-        
-        // Simulate sending notification
-        String message = String.format(
-            "Hello %s, a new dispute (ID: %s) has been assigned to you. Please review it as soon as possible.",
-            officer.getFullName(), dispute.getCaseId());
-        
-        // Log the notification for demo purposes
-        logger.info("Assignment notification sent: {}", message);
-    }
+    void sendAssignmentNotification(Dispute dispute, CaseOfficer officer);
     
     /**
      * Send a notification about a dispute approaching its SLA deadline
      * 
      * @param dispute The dispute that is approaching its deadline
      */
-    public void sendReminderNotification(Dispute dispute) {
-        if (!notificationsEnabled) {
-            logger.info("Notifications disabled. Would have sent reminder for dispute {}", 
-                dispute.getCaseId());
-            return;
-        }
-        
-        CaseOfficer officer = dispute.getAssignedOfficer();
-        if (officer == null) {
-            logger.warn("Cannot send reminder for dispute {} - no assigned officer", dispute.getCaseId());
-            return;
-        }
-        
-        // In a real system, this would send an email, SMS, or other notification
-        logger.info("Sending reminder notification for dispute {} to {}", 
-            dispute.getCaseId(), officer.getUsername());
-        
-        // Simulate sending notification
-        String message = String.format(
-            "REMINDER: Dispute ID %s is approaching its SLA deadline. Please complete your review as soon as possible.",
-            dispute.getCaseId());
-        
-        // Log the notification for demo purposes
-        logger.info("Reminder notification sent to {}: {}", officer.getUsername(), message);
-    }
+    void sendReminderNotification(Dispute dispute);
     
     /**
      * Send an escalation notification to a target group or supervisor
@@ -79,40 +27,42 @@ public class NotificationService {
      * @param subject The subject of the notification
      * @param message The message content
      */
-    public void sendEscalationNotification(String recipientId, String subject, String message) {
-        if (!notificationsEnabled) {
-            logger.info("Notifications disabled. Would have sent escalation to {}: {}", recipientId, subject);
-            return;
-        }
-        
-        logger.info("Sending escalation notification to {} - Subject: {}", recipientId, subject);
-        
-        // Log the notification for demo purposes
-        logger.info("Escalation notification sent to {}: {} - {}", recipientId, subject, message);
-    }
+    void sendEscalationNotification(String recipientId, String subject, String message);
     
     /**
      * Send a notification about a dispute being completed and ready for customer notification
      * 
      * @param dispute The completed dispute
      */
-    public void sendDisputeCompletionNotification(Dispute dispute) {
-        if (!notificationsEnabled) {
-            logger.info("Notifications disabled. Would have sent completion notification for dispute {}", 
-                dispute.getCaseId());
-            return;
-        }
-        
-        // In a real system, this would send an email, SMS, or other notification
-        logger.info("Sending dispute completion notification for dispute {}", dispute.getCaseId());
-        
-        // Simulate sending notification
-        String message = String.format(
-            "Your dispute (ID: %s) has been processed. Final status: %s",
-            dispute.getCaseId(), dispute.getStatus());
-        
-        // Log the notification for demo purposes
-        logger.info("Dispute completion notification prepared for user {}: {}", 
-            dispute.getUserId(), message);
-    }
+    void sendDisputeCompletionNotification(Dispute dispute);
+    
+    /**
+     * Send a reminder to a case owner about approaching SLA deadline
+     * @param dispute The dispute case
+     * @param minutesRemaining Minutes remaining until SLA breach
+     * @return true if the reminder was sent successfully
+     */
+    boolean sendSLAReminderNotification(Dispute dispute, int minutesRemaining);
+    
+    /**
+     * Send an escalation notification to a supervisor
+     * @param dispute The dispute that was escalated
+     * @param supervisor The supervisor the case was escalated to
+     * @return true if the notification was sent successfully
+     */
+    boolean sendEscalationNotification(Dispute dispute, CaseOfficer supervisor);
+    
+    /**
+     * Send an SLA violation notification
+     * @param dispute The dispute that breached SLA
+     * @return true if the notification was sent successfully
+     */
+    boolean sendSLAViolationNotification(Dispute dispute);
+    
+    /**
+     * Generate and send a compliance report for severe SLA violations
+     * @param dispute The dispute with severe SLA violation
+     * @return true if the report was generated and sent successfully
+     */
+    boolean generateComplianceReport(Dispute dispute);
 } 

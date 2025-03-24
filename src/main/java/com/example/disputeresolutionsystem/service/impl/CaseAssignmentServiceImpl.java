@@ -46,7 +46,8 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
         CaseOfficer.OfficerLevel requiredLevel = determineRequiredOfficerLevel(dispute);
         
         // Find available officers of the required level
-        List<CaseOfficer> availableOfficers = caseOfficerRepository.findAvailableOfficersByLevel(requiredLevel);
+        String roleForLevel = getRoleForOfficerLevel(requiredLevel);
+        List<CaseOfficer> availableOfficers = caseOfficerRepository.findByRoleAndAvailableTrue(roleForLevel);
         
         if (availableOfficers.isEmpty()) {
             log.warn("No available officers of level {} found for dispute {}", requiredLevel, dispute.getCaseId());
@@ -96,34 +97,41 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
     @Override
     @Transactional
     public boolean escalateDispute(Dispute dispute) {
-        log.info("Escalating dispute: {}", dispute.getCaseId());
+        log.info("Attempting to escalate dispute: {}", dispute.getCaseId());
+        
+        // Log details of the escalation
+        log.info("Dispute {} state before escalation: status={}, assignedOfficer={}", 
+                dispute.getCaseId(), 
+                dispute.getStatus(),
+                dispute.getAssignedOfficer() != null ? dispute.getAssignedOfficer().getUsername() : "none");
         
         // Update dispute status
         dispute.setEscalated(true);
         dispute.setEscalationTimestamp(LocalDateTime.now());
         dispute.setPriorityLevel(Dispute.PriorityLevel.HIGH); // Increase priority
         
-        // Try to find a supervisor
-        Optional<CaseOfficer> supervisor = caseOfficerRepository.findAvailableOfficersByLevel(CaseOfficer.OfficerLevel.SUPERVISOR)
+        // Find an available supervisor
+        Optional<CaseOfficer> supervisor = caseOfficerRepository.findByRoleAndAvailableTrue("SUPERVISOR")
                 .stream()
                 .findFirst();
         
         if (supervisor.isPresent()) {
-            CaseOfficer supervisorOfficer = supervisor.get();
+            // Get the previously assigned officer
+            CaseOfficer previousOfficer = dispute.getAssignedOfficer();
             
-            // If dispute was already assigned, decrease previous officer's workload
-            if (dispute.getAssignedOfficer() != null) {
-                CaseOfficer previousOfficer = dispute.getAssignedOfficer();
+            // Update workload for the previous officer if one was assigned
+            if (previousOfficer != null) {
                 previousOfficer.setCurrentWorkload(previousOfficer.getCurrentWorkload() - 1);
                 caseOfficerRepository.save(previousOfficer);
             }
             
             // Assign to supervisor
-            dispute.setAssignedOfficer(supervisorOfficer);
+            dispute.setAssignedOfficer(supervisor.get());
             dispute.setAssignmentTimestamp(LocalDateTime.now());
             dispute.setStatus("Escalated");
             
             // Update supervisor's workload
+            CaseOfficer supervisorOfficer = supervisor.get();
             supervisorOfficer.setCurrentWorkload(supervisorOfficer.getCurrentWorkload() + 1);
             caseOfficerRepository.save(supervisorOfficer);
             
@@ -206,6 +214,19 @@ public class CaseAssignmentServiceImpl implements CaseAssignmentService {
             return CaseOfficer.OfficerLevel.SENIOR;
         } else {
             return CaseOfficer.OfficerLevel.LEVEL_1;
+        }
+    }
+    
+    // Helper method to map officer level to role
+    private String getRoleForOfficerLevel(CaseOfficer.OfficerLevel level) {
+        switch (level) {
+            case SUPERVISOR:
+                return "SUPERVISOR";
+            case SENIOR:
+                return "SENIOR_OFFICER";
+            case LEVEL_1:
+            default:
+                return "OFFICER";
         }
     }
 } 

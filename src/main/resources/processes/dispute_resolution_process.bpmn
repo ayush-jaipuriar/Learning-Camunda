@@ -217,7 +217,7 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requiresMultiLevelApproval == true}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     
-    <bpmn:sequenceFlow id="Flow_ComplexityRegular" name="No" sourceRef="Gateway_ComplexityCheck" targetRef="Event_DisputeProcessed">
+    <bpmn:sequenceFlow id="Flow_ComplexityRegular" name="No" sourceRef="Gateway_ComplexityCheck" targetRef="Event_0z47pf5">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requiresMultiLevelApproval == false}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     
@@ -230,10 +230,11 @@
       <bpmn:outgoing>Flow_FromMultiLevelApproval</bpmn:outgoing>
     </bpmn:callActivity>
     
-    <bpmn:sequenceFlow id="Flow_FromMultiLevelApproval" sourceRef="Activity_StartMultiLevelApproval" targetRef="Event_DisputeProcessed" />
+    <bpmn:sequenceFlow id="Flow_FromMultiLevelApproval" sourceRef="Activity_StartMultiLevelApproval" targetRef="Event_0z47pf5" />
     
     <bpmn:endEvent id="Event_0z47pf5" name="Dispute Processed">
       <bpmn:incoming>Flow_FromMultiLevelApproval</bpmn:incoming>
+      <bpmn:incoming>Flow_ComplexityRegular</bpmn:incoming>
     </bpmn:endEvent>
   </bpmn:process>
   

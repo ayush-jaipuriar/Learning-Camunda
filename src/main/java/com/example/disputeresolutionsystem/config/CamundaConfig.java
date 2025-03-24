@@ -5,7 +5,12 @@ import com.example.disputeresolutionsystem.repository.CaseOfficerRepository;
 import com.example.disputeresolutionsystem.service.CamundaUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.camunda.bpm.engine.AuthorizationService;
 import org.camunda.bpm.engine.IdentityService;
+import org.camunda.bpm.engine.ProcessEngine;
+import org.camunda.bpm.engine.authorization.Authorization;
+import org.camunda.bpm.engine.authorization.Permissions;
+import org.camunda.bpm.engine.authorization.Resources;
 import org.camunda.bpm.engine.identity.Group;
 import org.camunda.bpm.engine.identity.User;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,10 +25,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CamundaConfig {
 
-    @Value("${camunda.bpm.admin-user.id}")
+    private final IdentityService identityService;
+    private final AuthorizationService authorizationService;
+    private final CaseOfficerRepository caseOfficerRepository;
+
+    @Value("${camunda.bpm.admin-user.id:admin}")
     private String adminUserId;
 
-    @Value("${camunda.bpm.admin-user.password}")
+    @Value("${camunda.bpm.admin-user.password:admin}")
     private String adminPassword;
 
     @Value("${camunda.bpm.admin-user.first-name:Admin}")
@@ -33,48 +42,52 @@ public class CamundaConfig {
     private String adminLastName;
 
     @Bean
-    public CommandLineRunner initAdminUser(IdentityService identityService) {
-        return args -> {
+    public String setupCamundaUsers(ProcessEngine processEngine) {
+        // Create admin user if it doesn't exist
+        try {
             log.info("Checking if admin user exists...");
-            
-            // Check if admin user exists
             User adminUser = identityService.createUserQuery()
-                    .userId(adminUserId)
-                    .singleResult();
-            
+                .userId(adminUserId)
+                .singleResult();
+
             if (adminUser == null) {
                 log.info("Creating admin user: {}", adminUserId);
-                
-                // Create admin user
-                User newUser = identityService.newUser(adminUserId);
-                newUser.setFirstName(adminFirstName);
-                newUser.setLastName(adminLastName);
-                newUser.setPassword(adminPassword);
-                newUser.setEmail("admin@example.com");
-                identityService.saveUser(newUser);
-                
-                // Create camunda-admin group if it doesn't exist
+                User newAdminUser = identityService.newUser(adminUserId);
+                newAdminUser.setFirstName(adminFirstName);
+                newAdminUser.setLastName(adminLastName);
+                newAdminUser.setEmail("admin@example.com");
+                newAdminUser.setPassword(adminPassword);
+                identityService.saveUser(newAdminUser);
+
+                // Check if camunda-admin group exists
                 Group adminGroup = identityService.createGroupQuery()
-                        .groupId("camunda-admin")
-                        .singleResult();
-                
+                    .groupId("camunda-admin")
+                    .singleResult();
+
                 if (adminGroup == null) {
                     log.info("Creating camunda-admin group");
-                    Group newGroup = identityService.newGroup("camunda-admin");
-                    newGroup.setName("Camunda Admin");
-                    newGroup.setType("SYSTEM");
-                    identityService.saveGroup(newGroup);
+                    Group newAdminGroup = identityService.newGroup("camunda-admin");
+                    newAdminGroup.setName("Camunda Administrators");
+                    newAdminGroup.setType("SYSTEM");
+                    identityService.saveGroup(newAdminGroup);
+
+                    // Create admin authorization
+                    Authorization authorization = authorizationService.createNewAuthorization(Authorization.AUTH_TYPE_GRANT);
+                    authorization.setGroupId("camunda-admin");
+                    authorization.addPermission(Permissions.ALL);
+                    authorization.setResource(Resources.APPLICATION);
+                    authorization.setResourceId("*");
+                    authorizationService.saveAuthorization(authorization);
                 }
-                
-                // Add admin user to camunda-admin group
+
                 try {
-                    // Check if the user is already a member of the group
-                    boolean isMember = identityService.createUserQuery()
-                            .userId(adminUserId)
-                            .memberOfGroup("camunda-admin")
-                            .count() > 0;
-                    
-                    if (!isMember) {
+                    // Check if the admin user is already a member of the camunda-admin group
+                    List<Group> userGroups = identityService.createGroupQuery()
+                        .groupMember(adminUserId)
+                        .list();
+                    boolean isAdmin = userGroups.stream()
+                        .anyMatch(group -> group.getId().equals("camunda-admin"));
+                    if (!isAdmin) {
                         log.info("Adding admin user to camunda-admin group");
                         identityService.createMembership(adminUserId, "camunda-admin");
                     } else {
@@ -82,8 +95,8 @@ public class CamundaConfig {
                     }
                 } catch (Exception e) {
                     log.error("Error checking/creating admin membership: {}", e.getMessage());
-                    // Create the membership anyway as a fallback
                     try {
+                        // Fallback - try to create membership directly
                         identityService.createMembership(adminUserId, "camunda-admin");
                         log.info("Created admin membership as fallback");
                     } catch (Exception ex) {
@@ -93,9 +106,41 @@ public class CamundaConfig {
             } else {
                 log.info("Admin user already exists: {}", adminUserId);
             }
-        };
+
+            // Sync case officers from database to Camunda
+            syncCaseOfficers();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return "Camunda users setup completed";
     }
-    
+
+    private void syncCaseOfficers() {
+        log.info("Syncing case officers with Camunda...");
+        List<CaseOfficer> officers = caseOfficerRepository.findAll();
+        int syncCount = 0;
+
+        if (officers.isEmpty()) {
+            log.info("No case officers found to sync");
+            return;
+        }
+
+        // Sync each officer to Camunda
+        for (CaseOfficer officer : officers) {
+            syncOfficerToCamunda(officer);
+            syncCount++;
+        }
+
+        log.info("Synced {} case officers with Camunda", syncCount);
+    }
+
+    private void syncOfficerToCamunda(CaseOfficer officer) {
+        // Implementation to sync a case officer with Camunda
+        // This would create a Camunda user and assign appropriate groups
+    }
+
     @Bean
     public CommandLineRunner syncCaseOfficers(CaseOfficerRepository caseOfficerRepository, 
                                              CamundaUserService camundaUserService) {

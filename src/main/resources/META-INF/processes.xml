@@ -6,6 +6,7 @@
     <process-archive>
         <resource>processes/dispute_resolution_process.bpmn</resource>
         <resource>bpmn/compliance_report_generation.bpmn</resource>
+        <resource>processes/multi_level_approval_process.bpmn</resource>
         <properties>
             <property name="isDeleteUponUndeploy">false</property>
             <property name="isScanForProcessDefinitions">false</property>

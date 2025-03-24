@@ -16,6 +16,7 @@ import jakarta.transaction.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -36,8 +37,8 @@ public class TaskController {
         // Check if the user is an admin (supervisor)
         boolean isAdmin = false;
         if (username != null && !username.isEmpty()) {
-            CaseOfficer officer = caseOfficerRepository.findByUsername(username);
-            if (officer != null && officer.getLevel() == CaseOfficer.OfficerLevel.SUPERVISOR) {
+            Optional<CaseOfficer> officerOpt = caseOfficerRepository.findByUsername(username);
+            if (officerOpt.isPresent() && officerOpt.get().getLevel() == CaseOfficer.OfficerLevel.SUPERVISOR) {
                 isAdmin = true;
             }
         }

@@ -71,38 +71,51 @@ public class Dispute {
     
     // Multi-level approval process fields
     @Enumerated(EnumType.STRING)
+    @Column(name = "level1_approval_status")
     private ApprovalStatus level1ApprovalStatus = ApprovalStatus.PENDING;
     
     @Enumerated(EnumType.STRING)
+    @Column(name = "level2_approval_status")
     private ApprovalStatus level2ApprovalStatus = ApprovalStatus.PENDING;
     
     @Enumerated(EnumType.STRING)
+    @Column(name = "level3_approval_status")
     private ApprovalStatus level3ApprovalStatus = ApprovalStatus.PENDING;
     
-    @Column(length = 100)
+    @Column(name = "level1_approver_username", length = 100)
     private String level1ApproverUsername;
     
-    @Column(length = 100)
+    @Column(name = "level2_approver_username", length = 100)
     private String level2ApproverUsername;
     
-    @Column(length = 100)
+    @Column(name = "level3_approver_username", length = 100)
     private String level3ApproverUsername;
     
-    @Column(length = 1000)
+    @Column(name = "level1_approval_notes", length = 1000)
     private String level1ApprovalNotes;
     
-    @Column(length = 1000)
+    @Column(name = "level2_approval_notes", length = 1000)
     private String level2ApprovalNotes;
     
-    @Column(length = 1000)
+    @Column(name = "level3_approval_notes", length = 1000)
     private String level3ApprovalNotes;
     
+    @Column(name = "level1_approval_timestamp")
     private LocalDateTime level1ApprovalTimestamp;
+    
+    @Column(name = "level2_approval_timestamp")
     private LocalDateTime level2ApprovalTimestamp;
+    
+    @Column(name = "level3_approval_timestamp")
     private LocalDateTime level3ApprovalTimestamp;
     
+    @Column(name = "level1_escalated")
     private boolean level1Escalated = false;
+    
+    @Column(name = "level2_escalated")
     private boolean level2Escalated = false;
+    
+    @Column(name = "level3_escalated")
     private boolean level3Escalated = false;
     
     public enum PriorityLevel {
