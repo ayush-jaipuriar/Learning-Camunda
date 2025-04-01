@@ -53,6 +53,7 @@ public class Level1ApprovalDelegate implements JavaDelegate {
             } else {
                 logger.warn("Failed to assign Level 1 approver for dispute ID: {}", caseId);
                 execution.setVariable("level1AssignmentSuccessful", false);
+                execution.setVariable("failedAssignmentLevel", 1);
             }
             
             // Save the updated dispute
@@ -60,6 +61,7 @@ public class Level1ApprovalDelegate implements JavaDelegate {
         } else {
             logger.error("Unable to find dispute with ID: {}", caseId);
             execution.setVariable("level1AssignmentSuccessful", false);
+            execution.setVariable("failedAssignmentLevel", 1);
         }
     }
 } 

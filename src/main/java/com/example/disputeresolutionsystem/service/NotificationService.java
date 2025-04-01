@@ -65,4 +65,11 @@ public interface NotificationService {
      * @return true if the report was generated and sent successfully
      */
     boolean generateComplianceReport(Dispute dispute);
+    
+    /**
+     * Send a notification to the user that their dispute has been approved
+     * @param dispute The approved dispute
+     * @return true if the notification was sent successfully
+     */
+    boolean sendApprovalNotification(Dispute dispute);
 } 

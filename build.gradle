@@ -43,6 +43,9 @@ dependencies {
     implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-webapp:${camundaVersion}"
     implementation "org.camunda.bpm.springboot:camunda-bpm-spring-boot-starter-rest:${camundaVersion}"
     
+    // JavaScript Engine 
+    implementation 'org.openjdk.nashorn:nashorn-core:15.4'
+    
     // Database
     runtimeOnly 'org.postgresql:postgresql'
     

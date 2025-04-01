@@ -8,6 +8,132 @@
 	},
 	"item": [
 		{
+			"name": "0. Database Operations",
+			"item": [
+				{
+					"name": "Reset Case Officers",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset-officers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset-officers"
+							]
+						},
+						"description": "Delete all case officers from the database and clean up related data"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Test Officers",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/create-officers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"create-officers"
+							]
+						},
+						"description": "Create test case officers of different levels in the database"
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Workloads",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/reset-workloads",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"reset-workloads"
+							]
+						},
+						"description": "Reset all officer workloads to 0"
+					},
+					"response": []
+				},
+				{
+					"name": "Set Max Officer Capacity",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/max-officer-capacity",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"max-officer-capacity"
+							]
+						},
+						"description": "Set all officers to their maximum capacity (useful for testing assignment failures)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Test Users",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/create-test-users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"create-test-users"
+							]
+						},
+						"description": "Create test users with PII data for testing dispute submission"
+					},
+					"response": []
+				},
+				{
+					"name": "Sync Camunda Users",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/sync-camunda-users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"sync-camunda-users"
+							]
+						},
+						"description": "Synchronize all case officers with Camunda user records"
+					},
+					"response": []
+				}
+			],
+			"description": "Database setup and management operations for testing"
+		},
+		{
 			"name": "1. Dispute Processing Flow",
 			"item": [
 				{
@@ -56,6 +182,92 @@
 					"response": []
 				},
 				{
+					"name": "Submit Dispute with Documents",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.caseId) {",
+									"    pm.collectionVariables.set(\"disputeCaseId\", jsonData.caseId);",
+									"    console.log(\"Set dispute case ID to: \" + jsonData.caseId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "userId",
+									"value": "john_user1",
+									"type": "text"
+								},
+								{
+									"key": "disputeType",
+									"value": "incorrect_info",
+									"type": "text"
+								},
+								{
+									"key": "creditReportId",
+									"value": "CR-E2E-FILE-TEST",
+									"type": "text"
+								},
+								{
+									"key": "userFullName",
+									"value": "John Doe",
+									"type": "text"
+								},
+								{
+									"key": "userAddress",
+									"value": "123 Main St, Anytown, CA 92345",
+									"type": "text"
+								},
+								{
+									"key": "userPhoneNumber",
+									"value": "555-123-4567",
+									"type": "text"
+								},
+								{
+									"key": "userEmailAddress",
+									"value": "john_user1@example.com",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "This is a test dispute with document upload for E2E testing.",
+									"type": "text"
+								},
+								{
+									"key": "documents",
+									"type": "file",
+									"src": "/path/to/your/document.pdf",
+									"description": "Supporting document for the dispute"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/submit",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"submit"
+							]
+						},
+						"description": "Create a new dispute with document attachment"
+					},
+					"response": []
+				},
+				{
 					"name": "Get Dispute Details",
 					"request": {
 						"method": "GET",
@@ -72,6 +284,81 @@
 							]
 						},
 						"description": "Retrieve details of the created dispute"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dispute Documents",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{disputeCaseId}}/documents",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{disputeCaseId}}",
+								"documents"
+							]
+						},
+						"description": "Retrieve documents attached to the dispute"
+					},
+					"response": []
+				},
+				{
+					"name": "Get PII Comparison",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{disputeCaseId}}/pii-comparison",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{disputeCaseId}}",
+								"pii-comparison"
+							]
+						},
+						"description": "Retrieve PII comparison data for the dispute"
+					},
+					"response": []
+				},
+				{
+					"name": "Update PII Validation Status",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{disputeCaseId}}/pii-validation?status=MATCH&notes=PII data has been verified and matches our records",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{disputeCaseId}}",
+								"pii-validation"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "MATCH",
+									"description": "Options: MATCH, MISMATCH, PENDING"
+								},
+								{
+									"key": "notes",
+									"value": "PII data has been verified and matches our records",
+									"description": "Optional notes about the validation"
+								}
+							]
+						},
+						"description": "Update the PII validation status for the dispute"
 					},
 					"response": []
 				},
@@ -704,6 +991,678 @@
 				}
 			],
 			"description": "Testing the audit and compliance features"
+		},
+		{
+			"name": "6. Multi-Level Approval Flow",
+			"item": [
+				{
+					"name": "Create High-Complexity Dispute",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.caseId) {",
+									"    pm.collectionVariables.set(\"highComplexityCaseId\", jsonData.caseId);",
+									"    console.log(\"Set high complexity case ID to: \" + jsonData.caseId);",
+									"}",
+									"if (jsonData.processId) {",
+									"    pm.collectionVariables.set(\"processInstanceId\", jsonData.processId);",
+									"    console.log(\"Set process instance ID to: \" + jsonData.processId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/test/high-complexity-dispute",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"test",
+								"high-complexity-dispute"
+							]
+						},
+						"description": "Create a high-complexity dispute that will trigger the multi-level approval process"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Dispute Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{highComplexityCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{highComplexityCaseId}}"
+							]
+						},
+						"description": "Get details of the high-complexity dispute"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Open Tasks",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData && jsonData.length > 0) {",
+									"    pm.collectionVariables.set(\"taskId\", jsonData[0].id);",
+									"    console.log(\"Set task ID to: \" + jsonData[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/task?processInstanceBusinessKey={{highComplexityCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"task"
+							],
+							"query": [
+								{
+									"key": "processInstanceBusinessKey",
+									"value": "{{highComplexityCaseId}}"
+								}
+							]
+						},
+						"description": "Get open tasks for the case"
+					},
+					"response": []
+				},
+				{
+					"name": "Review & Approve (Initial Review)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"variables\": {\n        \"reviewDecision\": {\"value\": \"APPROVED\"},\n        \"notes\": {\"value\": \"Initial review approved, forwarding to multi-level approval.\"},\n        \"piiValidationStatus\": {\"value\": \"MATCH\"}\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/task/{{taskId}}/complete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"task",
+								"{{taskId}}",
+								"complete"
+							]
+						},
+						"description": "Complete the initial review task with approval decision"
+					},
+					"response": []
+				},
+				{
+					"name": "Check Process Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/history/process-instance?processInstanceBusinessKey={{highComplexityCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"history",
+								"process-instance"
+							],
+							"query": [
+								{
+									"key": "processInstanceBusinessKey",
+									"value": "{{highComplexityCaseId}}"
+								}
+							]
+						},
+						"description": "Check the status of the process instance"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Activity Instances",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/history/activity-instance?processInstanceBusinessKey={{highComplexityCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"history",
+								"activity-instance"
+							],
+							"query": [
+								{
+									"key": "processInstanceBusinessKey",
+									"value": "{{highComplexityCaseId}}"
+								}
+							]
+						},
+						"description": "Check the history of activities in the process"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Level 1 Approval Tasks",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData && jsonData.length > 0) {",
+									"    pm.collectionVariables.set(\"level1TaskId\", jsonData[0].id);",
+									"    console.log(\"Set Level 1 task ID to: \" + jsonData[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/task?processInstanceId={{processInstanceId}}&taskDefinitionKeyLike=Level1Review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"task"
+							],
+							"query": [
+								{
+									"key": "processInstanceId",
+									"value": "{{processInstanceId}}"
+								},
+								{
+									"key": "taskDefinitionKeyLike",
+									"value": "Level1Review"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Manual Approver Assignment Tasks",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData && jsonData.taskId) {",
+									"    pm.collectionVariables.set(\"manualApproverTaskId\", jsonData.taskId);",
+									"    console.log(\"Set manual approver task ID to: \" + jsonData.taskId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/approval-manual-assignments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"approval-manual-assignments"
+							]
+						},
+						"description": "Get the manual approver assignment task if automatic assignment failed"
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Manual Approver Assignment (If Needed)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"level1ApproverUsername\": \"robertjohnson\",\n    \"level2ApproverUsername\": \"robertjohnson\",\n    \"level3ApproverUsername\": \"robertjohnson\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/tasks/approval-manual-assignment/{{manualApproverTaskId}}/complete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tasks",
+								"approval-manual-assignment",
+								"{{manualApproverTaskId}}",
+								"complete"
+							]
+						},
+						"description": "If automatic assignment fails, this will manually assign approvers to all levels"
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Level 1 Approval",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"variables\": {\n        \"approvalDecision\": {\"value\": \"APPROVED\"},\n        \"approvalNotes\": {\"value\": \"Approved at Level 1, forwarding to Level 2.\"}\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/task/{{level1TaskId}}/complete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"task",
+								"{{level1TaskId}}",
+								"complete"
+							]
+						},
+						"description": "Complete the Level 1 approval task"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Level 2 Approval Tasks",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData && jsonData.length > 0) {",
+									"    pm.collectionVariables.set(\"level2TaskId\", jsonData[0].id);",
+									"    console.log(\"Set Level 2 task ID to: \" + jsonData[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/task?taskDefinitionKeyLike=Level2Review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"task"
+							],
+							"query": [
+								{
+									"key": "taskDefinitionKeyLike",
+									"value": "Level2Review"
+								}
+							]
+						},
+						"description": "Get Level 2 approval tasks"
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Level 2 Approval",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"variables\": {\n        \"approvalDecision\": {\"value\": \"APPROVED\"},\n        \"approvalNotes\": {\"value\": \"Approved at Level 2, forwarding to Level 3.\"}\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/task/{{level2TaskId}}/complete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"task",
+								"{{level2TaskId}}",
+								"complete"
+							]
+						},
+						"description": "Complete the Level 2 approval task"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Level 3 Approval Tasks",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData && jsonData.length > 0) {",
+									"    pm.collectionVariables.set(\"level3TaskId\", jsonData[0].id);",
+									"    console.log(\"Set Level 3 task ID to: \" + jsonData[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/task?taskDefinitionKeyLike=Level3Review",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"task"
+							],
+							"query": [
+								{
+									"key": "taskDefinitionKeyLike",
+									"value": "Level3Review"
+								}
+							]
+						},
+						"description": "Get Level 3 approval tasks"
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Level 3 Approval",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"variables\": {\n        \"approvalDecision\": {\"value\": \"APPROVED\"},\n        \"approvalNotes\": {\"value\": \"Final approval at Level 3.\"}\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/task/{{level3TaskId}}/complete",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"task",
+								"{{level3TaskId}}",
+								"complete"
+							]
+						},
+						"description": "Complete the Level 3 approval task"
+					},
+					"response": []
+				},
+				{
+					"name": "Check Final Dispute Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/disputes/{{highComplexityCaseId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"disputes",
+								"{{highComplexityCaseId}}"
+							]
+						},
+						"description": "Check the final status of the dispute after multi-level approval"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Final Process Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/engine-rest/history/process-instance?processInstanceBusinessKey={{highComplexityCaseId}}&finished=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"engine-rest",
+								"history",
+								"process-instance"
+							],
+							"query": [
+								{
+									"key": "processInstanceBusinessKey",
+									"value": "{{highComplexityCaseId}}"
+								},
+								{
+									"key": "finished",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Check if the process has completed successfully"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Approval Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/approvals/{{highComplexityCaseId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"approvals",
+								"{{highComplexityCaseId}}",
+								"status"
+							]
+						},
+						"description": "Get the detailed approval status"
+					},
+					"response": []
+				},
+				{
+					"name": "Check Multi-Level Requirement",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/approvals/{{disputeCaseId}}/requires-multi-level",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"approvals",
+								"{{disputeCaseId}}",
+								"requires-multi-level"
+							]
+						},
+						"description": "Check if a dispute requires multi-level approval"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Level 1 Decision",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/approvals/{{disputeCaseId}}/level1?decision=APPROVED&notes=Approved at Level 1&username=level1_approver",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"approvals",
+								"{{disputeCaseId}}",
+								"level1"
+							],
+							"query": [
+								{
+									"key": "decision",
+									"value": "APPROVED",
+									"description": "Options: APPROVED, REJECTED, NEEDS_MORE_INFO"
+								},
+								{
+									"key": "notes",
+									"value": "Approved at Level 1",
+									"description": "Notes about the decision"
+								},
+								{
+									"key": "username",
+									"value": "level1_approver",
+									"description": "Username of the approver"
+								}
+							]
+						},
+						"description": "Submit a Level 1 approval decision"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Level 2 Decision",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/approvals/{{disputeCaseId}}/level2?decision=APPROVED&notes=Approved at Level 2&username=level2_approver",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"approvals",
+								"{{disputeCaseId}}",
+								"level2"
+							],
+							"query": [
+								{
+									"key": "decision",
+									"value": "APPROVED",
+									"description": "Options: APPROVED, REJECTED, NEEDS_MORE_INFO"
+								},
+								{
+									"key": "notes",
+									"value": "Approved at Level 2",
+									"description": "Notes about the decision"
+								},
+								{
+									"key": "username",
+									"value": "level2_approver",
+									"description": "Username of the approver"
+								}
+							]
+						},
+						"description": "Submit a Level 2 approval decision"
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Level 3 Decision",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/approvals/{{disputeCaseId}}/level3?decision=APPROVED&notes=Final approval at Level 3&username=level3_approver",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"approvals",
+								"{{disputeCaseId}}",
+								"level3"
+							],
+							"query": [
+								{
+									"key": "decision",
+									"value": "APPROVED",
+									"description": "Options: APPROVED, REJECTED, NEEDS_MORE_INFO"
+								},
+								{
+									"key": "notes",
+									"value": "Final approval at Level 3",
+									"description": "Notes about the decision"
+								},
+								{
+									"key": "username",
+									"value": "level3_approver",
+									"description": "Username of the approver"
+								}
+							]
+						},
+						"description": "Submit a Level 3 approval decision"
+					},
+					"response": []
+				}
+			],
+			"description": "Testing the multi-level approval process for complex cases"
 		}
 	],
 	"event": [
@@ -782,6 +1741,26 @@
 		},
 		{
 			"key": "isoEndDate",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "highComplexityCaseId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "level1TaskId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "level2TaskId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "level3TaskId",
 			"value": "",
 			"type": "string"
 		}

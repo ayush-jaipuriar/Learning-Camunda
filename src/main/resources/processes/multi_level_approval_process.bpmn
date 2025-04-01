@@ -47,12 +47,51 @@
           <camunda:formField id="level2ApproverUsername" label="Assign Level 2 Approver" type="string" />
           <camunda:formField id="level3ApproverUsername" label="Assign Level 3 Approver" type="string" />
         </camunda:formData>
+        <camunda:taskListener event="complete" delegateExpression="${manualApproverAssignmentListener}" />
+        <camunda:inputOutput>
+          <camunda:inputParameter name="failedAssignmentLevel">
+            <camunda:script scriptFormat="javascript">
+              var level = 1;
+              
+              if (execution.getVariable("fromLevel2Assignment") === true) {
+                level = 2;
+                execution.removeVariable("fromLevel2Assignment");
+              } else if (execution.getVariable("fromLevel3Assignment") === true) {
+                level = 3;
+                execution.removeVariable("fromLevel3Assignment");
+              }
+              
+              level;
+            </camunda:script>
+          </camunda:inputParameter>
+        </camunda:inputOutput>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_Level1AssignmentFailed</bpmn:incoming>
+      <bpmn:incoming>Flow_Level2AssignmentFailed</bpmn:incoming>
+      <bpmn:incoming>Flow_Level3AssignmentFailed</bpmn:incoming>
       <bpmn:outgoing>Flow_FromManualAssignment</bpmn:outgoing>
     </bpmn:userTask>
     
-    <bpmn:sequenceFlow id="Flow_FromManualAssignment" sourceRef="Activity_ManualAssignment" targetRef="Activity_Level1Review" />
+    <bpmn:sequenceFlow id="Flow_FromManualAssignment" sourceRef="Activity_ManualAssignment" targetRef="Gateway_ManualAssignmentRouter" />
+    
+    <bpmn:exclusiveGateway id="Gateway_ManualAssignmentRouter" name="Assignment Level">
+      <bpmn:incoming>Flow_FromManualAssignment</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToLevel1ReviewFromManual</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ToLevel2ReviewFromManual</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ToLevel3ReviewFromManual</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_ToLevel1ReviewFromManual" name="Level 1" sourceRef="Gateway_ManualAssignmentRouter" targetRef="Activity_Level1Review">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${failedAssignmentLevel == 1}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_ToLevel2ReviewFromManual" name="Level 2" sourceRef="Gateway_ManualAssignmentRouter" targetRef="Activity_Level2Review">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${failedAssignmentLevel == 2}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_ToLevel3ReviewFromManual" name="Level 3" sourceRef="Gateway_ManualAssignmentRouter" targetRef="Activity_Level3Review">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${failedAssignmentLevel == 3}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
     
     <bpmn:userTask id="Activity_Level1Review" name="Level 1 Review" camunda:assignee="${level1ApproverUsername}">
       <bpmn:extensionElements>
@@ -173,6 +212,11 @@
     </bpmn:sequenceFlow>
     
     <bpmn:sequenceFlow id="Flow_Level2AssignmentFailed" name="No" sourceRef="Gateway_Level2Assignment" targetRef="Activity_ManualAssignment">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="take">
+          <camunda:script scriptFormat="javascript">execution.setVariable("fromLevel2Assignment", true);</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${level2AssignmentSuccessful == false}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     
@@ -304,6 +348,11 @@
     </bpmn:sequenceFlow>
     
     <bpmn:sequenceFlow id="Flow_Level3AssignmentFailed" name="No" sourceRef="Gateway_Level3Assignment" targetRef="Activity_ManualAssignment">
+      <bpmn:extensionElements>
+        <camunda:executionListener event="take">
+          <camunda:script scriptFormat="javascript">execution.setVariable("fromLevel3Assignment", true);</camunda:script>
+        </camunda:executionListener>
+      </bpmn:extensionElements>
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${level3AssignmentSuccessful == false}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     
@@ -427,7 +476,7 @@
     </bpmn:sequenceFlow>
     
     <!-- Common Endpoints -->
-    <bpmn:serviceTask id="Activity_FinalizeApproval" name="Finalize Approval" camunda:expression="${true}">
+    <bpmn:serviceTask id="Activity_FinalizeApproval" name="Finalize Approval" camunda:delegateExpression="${finalApprovalDelegate}">
       <bpmn:incoming>Flow_Level3Approved</bpmn:incoming>
       <bpmn:outgoing>Flow_ToEndApproved</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -438,7 +487,7 @@
       <bpmn:incoming>Flow_ToEndApproved</bpmn:incoming>
     </bpmn:endEvent>
     
-    <bpmn:serviceTask id="Activity_RejectCase" name="Reject Dispute" camunda:expression="${true}">
+    <bpmn:serviceTask id="Activity_RejectCase" name="Reject Dispute" camunda:delegateExpression="${rejectCaseDelegate}">
       <bpmn:incoming>Flow_Level1Rejected</bpmn:incoming>
       <bpmn:incoming>Flow_Level2Rejected</bpmn:incoming>
       <bpmn:incoming>Flow_Level3Rejected</bpmn:incoming>
@@ -451,7 +500,7 @@
       <bpmn:incoming>Flow_ToEndRejected</bpmn:incoming>
     </bpmn:endEvent>
     
-    <bpmn:serviceTask id="Activity_RequestMoreInfo" name="Request More Information" camunda:expression="${true}">
+    <bpmn:serviceTask id="Activity_RequestMoreInfo" name="Request More Information" camunda:delegateExpression="${requestMoreInfoDelegate}">
       <bpmn:incoming>Flow_Level1NeedsMoreInfo</bpmn:incoming>
       <bpmn:incoming>Flow_Level2NeedsMoreInfo</bpmn:incoming>
       <bpmn:incoming>Flow_Level3NeedsMoreInfo</bpmn:incoming>

@@ -1,5 +1,6 @@
 package com.example.disputeresolutionsystem.controller;
 
+import com.example.disputeresolutionsystem.dto.DisputeSubmissionDTO;
 import com.example.disputeresolutionsystem.model.CaseOfficer;
 import com.example.disputeresolutionsystem.model.Dispute;
 import com.example.disputeresolutionsystem.model.UserPII;
@@ -7,15 +8,19 @@ import com.example.disputeresolutionsystem.repository.CaseOfficerRepository;
 import com.example.disputeresolutionsystem.repository.DisputeRepository;
 import com.example.disputeresolutionsystem.service.CamundaUserService;
 import com.example.disputeresolutionsystem.service.CaseAssignmentService;
+import com.example.disputeresolutionsystem.service.DisputeService;
 import com.example.disputeresolutionsystem.service.UserPIIService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.IdentityService;
+import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.identity.Group;
 import org.camunda.bpm.engine.identity.User;
+import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.transaction.Transactional;
 import java.time.LocalDateTime;
@@ -38,6 +43,8 @@ public class TestController {
     private final CamundaUserService camundaUserService;
     private final IdentityService identityService;
     private final UserPIIService userPIIService;
+    private final DisputeService disputeService;
+    private final RuntimeService runtimeService;
 
     @PostMapping("/reset-officers")
     @Transactional
@@ -380,6 +387,58 @@ public class TestController {
         response.put("status", "success");
         response.put("message", "Created test users with PII data");
         response.put("users", createdUsers);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Create a test high-complexity dispute for multi-level approval testing
+     */
+    @PostMapping("/high-complexity-dispute")
+    public ResponseEntity<Map<String, Object>> createHighComplexityDispute(
+            @RequestParam(value = "file", required = false) MultipartFile file) {
+        log.info("Creating test high-complexity dispute for multi-level approval");
+        
+        // Create a dispute DTO
+        DisputeSubmissionDTO disputeDTO = new DisputeSubmissionDTO();
+        disputeDTO.setUserId("test_user");
+        disputeDTO.setDisputeType("Fraud Alert");
+        disputeDTO.setCreditReportId("CR-" + System.currentTimeMillis());
+        disputeDTO.setUserFullName("John Test Doe");
+        disputeDTO.setUserAddress("456 High Risk Ave, Complexville, CA 98765");
+        disputeDTO.setUserPhoneNumber("555-987-6543");
+        disputeDTO.setUserEmailAddress("high_risk@example.com");
+        disputeDTO.setDescription("This is a high-complexity dispute for testing the multi-level approval process");
+        
+        List<MultipartFile> files = new ArrayList<>();
+        if (file != null && !file.isEmpty()) {
+            files.add(file);
+            log.info("Received document with size: {} bytes, name: {}", file.getSize(), file.getOriginalFilename());
+        }
+        
+        // Create the dispute
+        Dispute dispute = disputeService.createDispute(disputeDTO, files);
+        
+        // Force high complexity if not already set
+        if (dispute.getComplexityLevel() != Dispute.ComplexityLevel.HIGH_RISK) {
+            dispute.setComplexityLevel(Dispute.ComplexityLevel.HIGH_RISK);
+            dispute.setPriorityLevel(Dispute.PriorityLevel.HIGH);
+            disputeRepository.save(dispute);
+            log.info("Forced complexity level to HIGH_RISK for testing");
+        }
+        
+        // Get the process instance ID
+        ProcessInstance processInstance = runtimeService.createProcessInstanceQuery()
+                .processInstanceBusinessKey(dispute.getCaseId())
+                .singleResult();
+        
+        String processInstanceId = processInstance != null ? processInstance.getId() : null;
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("caseId", dispute.getCaseId());
+        response.put("processId", processInstanceId);
+        response.put("status", dispute.getStatus());
+        response.put("complexityLevel", dispute.getComplexityLevel().toString());
         
         return ResponseEntity.ok(response);
     }

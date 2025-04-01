@@ -9,6 +9,8 @@
                   targetNamespace="http://bpmn.io/schema/bpmn"
                   exporter="Camunda Modeler"
                   exporterVersion="5.0.0">
+  <bpmn:message id="Message_MultiLevelApprovalComplete" name="MultiLevelApprovalComplete" />
+  
   <bpmn:process id="dispute_resolution_process" name="Dispute Resolution Process" isExecutable="true" camunda:historyTimeToLive="30">
     <bpmn:startEvent id="StartEvent_1" name="Dispute Submitted">
       <bpmn:extensionElements>
@@ -198,27 +200,61 @@
     
     <bpmn:sequenceFlow id="Flow_FromTimer" sourceRef="Event_Timer" targetRef="Activity_EscalateCase" />
     
-    <bpmn:serviceTask id="Activity_CheckComplexity" name="Check Dispute Complexity" camunda:delegateExpression="${complexityCheckDelegate}">
+    <bpmn:sequenceFlow id="Flow_FromReviewDispute" sourceRef="Activity_ReviewDispute" targetRef="Activity_CheckMultiLevelApproval" />
+    
+    <bpmn:serviceTask id="Activity_CheckMultiLevelApproval" name="Check Multi-Level Approval" camunda:delegateExpression="${multiLevelApprovalStartDelegate}">
       <bpmn:incoming>Flow_FromReviewDispute</bpmn:incoming>
-      <bpmn:outgoing>Flow_ToComplexityGateway</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ToMultiLevelGateway</bpmn:outgoing>
     </bpmn:serviceTask>
     
-    <bpmn:sequenceFlow id="Flow_FromReviewDispute" sourceRef="Activity_ReviewDispute" targetRef="Activity_CheckComplexity" />
+    <bpmn:sequenceFlow id="Flow_ToMultiLevelGateway" sourceRef="Activity_CheckMultiLevelApproval" targetRef="Gateway_MultiLevelCheck" />
     
-    <bpmn:exclusiveGateway id="Gateway_ComplexityCheck" name="High Complexity?">
-      <bpmn:incoming>Flow_ToComplexityGateway</bpmn:incoming>
-      <bpmn:outgoing>Flow_ComplexityHigh</bpmn:outgoing>
-      <bpmn:outgoing>Flow_ComplexityRegular</bpmn:outgoing>
+    <bpmn:exclusiveGateway id="Gateway_MultiLevelCheck" name="Requires Multi-Level Approval?">
+      <bpmn:incoming>Flow_ToMultiLevelGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_MultiLevelYes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_MultiLevelNo</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     
-    <bpmn:sequenceFlow id="Flow_ToComplexityGateway" sourceRef="Activity_CheckComplexity" targetRef="Gateway_ComplexityCheck" />
-    
-    <bpmn:sequenceFlow id="Flow_ComplexityHigh" name="Yes" sourceRef="Gateway_ComplexityCheck" targetRef="Activity_StartMultiLevelApproval">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requiresMultiLevelApproval == true}</bpmn:conditionExpression>
+    <bpmn:sequenceFlow id="Flow_MultiLevelYes" name="Yes" sourceRef="Gateway_MultiLevelCheck" targetRef="Activity_WaitForApproval">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${multiLevelApprovalStarted == true}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     
-    <bpmn:sequenceFlow id="Flow_ComplexityRegular" name="No" sourceRef="Gateway_ComplexityCheck" targetRef="Event_0z47pf5">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requiresMultiLevelApproval == false}</bpmn:conditionExpression>
+    <bpmn:sequenceFlow id="Flow_MultiLevelNo" name="No" sourceRef="Gateway_MultiLevelCheck" targetRef="Activity_UpdateStatus">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${multiLevelApprovalStarted == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:receiveTask id="Activity_WaitForApproval" name="Wait for Multi-Level Approval" messageRef="Message_MultiLevelApprovalComplete">
+      <bpmn:incoming>Flow_MultiLevelYes</bpmn:incoming>
+      <bpmn:outgoing>Flow_FromWaitForApproval</bpmn:outgoing>
+    </bpmn:receiveTask>
+    
+    <bpmn:sequenceFlow id="Flow_FromWaitForApproval" sourceRef="Activity_WaitForApproval" targetRef="Activity_UpdateStatus" />
+    
+    <bpmn:serviceTask id="Activity_UpdateStatus" name="Update Status" camunda:expression="${execution.setVariable('status', reviewDecision)}">
+      <bpmn:incoming>Flow_MultiLevelNo</bpmn:incoming>
+      <bpmn:incoming>Flow_FromWaitForApproval</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToStatusGateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    
+    <bpmn:sequenceFlow id="Flow_ToStatusGateway" sourceRef="Activity_UpdateStatus" targetRef="Gateway_ReviewDecision" />
+    
+    <bpmn:exclusiveGateway id="Gateway_ReviewDecision" name="Review Decision">
+      <bpmn:incoming>Flow_ToStatusGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Decision_Approved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Decision_Rejected</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Decision_NeedMoreInfo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    
+    <bpmn:sequenceFlow id="Flow_Decision_Approved" name="Approved" sourceRef="Gateway_ReviewDecision" targetRef="Activity_StartMultiLevelApproval">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewDecision == 'APPROVED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_Decision_Rejected" name="Rejected" sourceRef="Gateway_ReviewDecision" targetRef="Event_0z47pf5">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewDecision == 'REJECTED'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    
+    <bpmn:sequenceFlow id="Flow_Decision_NeedMoreInfo" name="Need More Information" sourceRef="Gateway_ReviewDecision" targetRef="Event_0z47pf5">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${reviewDecision == 'NEED_MORE_INFO'}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     
     <bpmn:callActivity id="Activity_StartMultiLevelApproval" name="Multi-Level Approval Process" calledElement="multi_level_approval_process">
@@ -226,7 +262,7 @@
         <camunda:in variables="all" />
         <camunda:out variables="all" />
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_ComplexityHigh</bpmn:incoming>
+      <bpmn:incoming>Flow_Decision_Approved</bpmn:incoming>
       <bpmn:outgoing>Flow_FromMultiLevelApproval</bpmn:outgoing>
     </bpmn:callActivity>
     
@@ -234,7 +270,8 @@
     
     <bpmn:endEvent id="Event_0z47pf5" name="Dispute Processed">
       <bpmn:incoming>Flow_FromMultiLevelApproval</bpmn:incoming>
-      <bpmn:incoming>Flow_ComplexityRegular</bpmn:incoming>
+      <bpmn:incoming>Flow_Decision_Rejected</bpmn:incoming>
+      <bpmn:incoming>Flow_Decision_NeedMoreInfo</bpmn:incoming>
     </bpmn:endEvent>
   </bpmn:process>
   

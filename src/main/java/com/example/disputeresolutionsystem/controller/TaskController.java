@@ -116,6 +116,25 @@ public class TaskController {
         return ResponseEntity.ok(taskDetails);
     }
 
+    @GetMapping("/approval-manual-assignments")
+    public ResponseEntity<Map<String, Object>> getApprovalManualAssignmentTasks() {
+        // Find manual assignment tasks
+        Task task = taskService.createTaskQuery()
+                .taskDefinitionKey("Activity_ManualAssignment")
+                .singleResult();
+        
+        if (task == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        Map<String, Object> taskDetails = new HashMap<>();
+        taskDetails.put("taskId", task.getId());
+        taskDetails.put("name", task.getName());
+        taskDetails.put("caseId", taskService.getVariable(task.getId(), "caseId"));
+        
+        return ResponseEntity.ok(taskDetails);
+    }
+
     @PostMapping("/{taskId}/complete")
     @Transactional
     public ResponseEntity<Map<String, Object>> completeTask(
@@ -214,6 +233,57 @@ public class TaskController {
         response.put("message", "Task completed successfully");
         response.put("taskId", taskId);
         response.put("caseId", caseId);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/approval-manual-assignment/{taskId}/complete")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> completeApprovalManualAssignment(
+            @PathVariable String taskId,
+            @RequestBody Map<String, String> approverAssignments) {
+        
+        log.info("Completing manual approver assignment task: {}", taskId);
+        
+        // Get the task
+        Task task = taskService.createTaskQuery()
+                .taskId(taskId)
+                .singleResult();
+        
+        if (task == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        if (!task.getTaskDefinitionKey().equals("Activity_ManualAssignment")) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "Task is not a manual approver assignment task"
+            ));
+        }
+        
+        // Collect variables to set
+        Map<String, Object> variables = new HashMap<>();
+        
+        // Set approver usernames from the request
+        if (approverAssignments.containsKey("level1ApproverUsername")) {
+            variables.put("level1ApproverUsername", approverAssignments.get("level1ApproverUsername"));
+        }
+        
+        if (approverAssignments.containsKey("level2ApproverUsername")) {
+            variables.put("level2ApproverUsername", approverAssignments.get("level2ApproverUsername"));
+        }
+        
+        if (approverAssignments.containsKey("level3ApproverUsername")) {
+            variables.put("level3ApproverUsername", approverAssignments.get("level3ApproverUsername"));
+        }
+        
+        // Complete the task with the variables
+        taskService.complete(taskId, variables);
+        
+        // Return success response
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", "success");
+        response.put("message", "Manual approver assignment completed");
+        response.put("taskId", taskId);
         
         return ResponseEntity.ok(response);
     }

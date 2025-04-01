@@ -182,4 +182,32 @@ public class NotificationServiceImpl implements NotificationService {
         logger.info("Dispute completion notification prepared for user {}: {}", 
             dispute.getUserId(), message);
     }
+
+    @Override
+    public boolean sendApprovalNotification(Dispute dispute) {
+        if (!notificationsEnabled) {
+            logger.info("Notifications disabled. Would have sent approval notification for dispute {}", 
+                dispute.getCaseId());
+            return false;
+        }
+        
+        // In a real system, this would send an email, SMS, or other notification
+        logger.info("Sending approval notification for dispute {}", dispute.getCaseId());
+        
+        StringBuilder message = new StringBuilder();
+        message.append(String.format(
+            "Your dispute (ID: %s) has been APPROVED through our multi-level review process.\n",
+            dispute.getCaseId()));
+        message.append("The dispute was reviewed and approved by:\n");
+        message.append(String.format("Level 1 Approver: %s\n", dispute.getLevel1ApproverUsername()));
+        message.append(String.format("Level 2 Approver: %s\n", dispute.getLevel2ApproverUsername()));
+        message.append(String.format("Level 3 (Final) Approver: %s\n", dispute.getLevel3ApproverUsername()));
+        message.append("\nThank you for your patience during our thorough review process.");
+        
+        // Log the notification for demo purposes
+        logger.info("Approval notification prepared for user {}: {}", 
+            dispute.getUserId(), message.toString());
+        
+        return true;
+    }
 } 

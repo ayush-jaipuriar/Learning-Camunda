@@ -20,7 +20,22 @@ public class ApprovalEscalationDelegate implements JavaDelegate {
     @Override
     public void execute(DelegateExecution execution) throws Exception {
         String caseId = (String) execution.getVariable("caseId");
-        Integer approvalLevel = (Integer) execution.getVariable("approvalLevel");
+        
+        // Fix for the ClassCastException - handle both Integer and String values
+        Object approvalLevelObj = execution.getVariable("approvalLevel");
+        Integer approvalLevel = null;
+        
+        if (approvalLevelObj instanceof Integer) {
+            approvalLevel = (Integer) approvalLevelObj;
+        } else if (approvalLevelObj instanceof String) {
+            try {
+                approvalLevel = Integer.parseInt((String) approvalLevelObj);
+            } catch (NumberFormatException e) {
+                log.error("Invalid approval level format for dispute: {}, value: {}", caseId, approvalLevelObj);
+                execution.setVariable("escalationSuccessful", false);
+                return;
+            }
+        }
         
         if (approvalLevel == null) {
             log.error("No approval level specified for escalation of dispute: {}", caseId);

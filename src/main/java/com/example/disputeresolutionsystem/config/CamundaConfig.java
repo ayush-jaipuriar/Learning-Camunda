@@ -2,8 +2,6 @@ package com.example.disputeresolutionsystem.config;
 
 import com.example.disputeresolutionsystem.model.CaseOfficer;
 import com.example.disputeresolutionsystem.repository.CaseOfficerRepository;
-import com.example.disputeresolutionsystem.service.CamundaUserService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.AuthorizationService;
 import org.camunda.bpm.engine.IdentityService;
@@ -13,8 +11,8 @@ import org.camunda.bpm.engine.authorization.Permissions;
 import org.camunda.bpm.engine.authorization.Resources;
 import org.camunda.bpm.engine.identity.Group;
 import org.camunda.bpm.engine.identity.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -22,12 +20,16 @@ import java.util.List;
 
 @Slf4j
 @Configuration
-@RequiredArgsConstructor
 public class CamundaConfig {
 
-    private final IdentityService identityService;
-    private final AuthorizationService authorizationService;
-    private final CaseOfficerRepository caseOfficerRepository;
+    @Autowired
+    private IdentityService identityService;
+    
+    @Autowired
+    private AuthorizationService authorizationService;
+    
+    @Autowired
+    private CaseOfficerRepository caseOfficerRepository;
 
     @Value("${camunda.bpm.admin-user.id:admin}")
     private String adminUserId;
@@ -111,54 +113,75 @@ public class CamundaConfig {
             syncCaseOfficers();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error setting up Camunda users", e);
         }
         
         return "Camunda users setup completed";
     }
-
+    
     private void syncCaseOfficers() {
-        log.info("Syncing case officers with Camunda...");
+        log.info("Syncing case officers with Camunda users...");
         List<CaseOfficer> officers = caseOfficerRepository.findAll();
-        int syncCount = 0;
-
         if (officers.isEmpty()) {
-            log.info("No case officers found to sync");
+            log.warn("No case officers found in database to sync with Camunda");
             return;
         }
-
-        // Sync each officer to Camunda
+        
         for (CaseOfficer officer : officers) {
-            syncOfficerToCamunda(officer);
-            syncCount++;
-        }
-
-        log.info("Synced {} case officers with Camunda", syncCount);
-    }
-
-    private void syncOfficerToCamunda(CaseOfficer officer) {
-        // Implementation to sync a case officer with Camunda
-        // This would create a Camunda user and assign appropriate groups
-    }
-
-    @Bean
-    public CommandLineRunner syncCaseOfficers(CaseOfficerRepository caseOfficerRepository, 
-                                             CamundaUserService camundaUserService) {
-        return args -> {
-            log.info("Syncing case officers with Camunda...");
+            String username = officer.getUsername();
             
-            // Get all case officers
-            List<CaseOfficer> officers = caseOfficerRepository.findAll();
+            // Check if Camunda user exists
+            User camundaUser = identityService.createUserQuery()
+                .userId(username)
+                .singleResult();
             
-            if (officers.isEmpty()) {
-                log.info("No case officers found to sync");
-                return;
+            if (camundaUser == null) {
+                log.info("Creating Camunda user for officer: {}", username);
+                User newUser = identityService.newUser(username);
+                newUser.setFirstName(officer.getUsername());
+                newUser.setLastName("");
+                newUser.setEmail(username + "@example.com");
+                newUser.setPassword(username);
+                identityService.saveUser(newUser);
+                
+                // Add user to appropriate group based on level
+                String groupId = "";
+                
+                switch (officer.getLevel()) {
+                    case LEVEL_1:
+                        groupId = "level_1_officers";
+                        break;
+                    case SENIOR:
+                        groupId = "senior_officers";
+                        break;
+                    case SUPERVISOR:
+                        groupId = "supervisors";
+                        break;
+                }
+                
+                // Create group if it doesn't exist
+                Group group = identityService.createGroupQuery()
+                    .groupId(groupId)
+                    .singleResult();
+                
+                if (group == null) {
+                    log.info("Creating group: {}", groupId);
+                    Group newGroup = identityService.newGroup(groupId);
+                    newGroup.setName(groupId.replace("_", " ").toUpperCase());
+                    newGroup.setType("WORKFLOW");
+                    identityService.saveGroup(newGroup);
+                }
+                
+                // Add user to group
+                try {
+                    identityService.createMembership(username, groupId);
+                    log.info("Added user {} to group {}", username, groupId);
+                } catch (Exception e) {
+                    log.error("Error adding user {} to group {}: {}", username, groupId, e.getMessage());
+                }
             }
-            
-            // Sync officers with Camunda
-            int syncCount = camundaUserService.syncOfficersWithCamundaUsers(officers);
-            
-            log.info("Synced {} case officers with Camunda", syncCount);
-        };
+        }
+        
+        log.info("Case officer sync completed");
     }
 } 

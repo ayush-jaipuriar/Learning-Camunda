@@ -44,6 +44,7 @@ public class Level3ApprovalDelegate implements JavaDelegate {
             if (dispute.getLevel2ApprovalStatus() != Dispute.ApprovalStatus.APPROVED) {
                 logger.warn("Cannot assign Level 3 approver for dispute ID: {} because Level 2 is not approved", caseId);
                 execution.setVariable("level3AssignmentSuccessful", false);
+                execution.setVariable("failedAssignmentLevel", 3);
                 return;
             }
             
@@ -60,6 +61,7 @@ public class Level3ApprovalDelegate implements JavaDelegate {
             } else {
                 logger.warn("Failed to assign Level 3 approver for dispute ID: {}", caseId);
                 execution.setVariable("level3AssignmentSuccessful", false);
+                execution.setVariable("failedAssignmentLevel", 3);
             }
             
             // Save the updated dispute
@@ -67,6 +69,7 @@ public class Level3ApprovalDelegate implements JavaDelegate {
         } else {
             logger.error("Unable to find dispute with ID: {}", caseId);
             execution.setVariable("level3AssignmentSuccessful", false);
+            execution.setVariable("failedAssignmentLevel", 3);
         }
     }
 } 
